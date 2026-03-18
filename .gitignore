@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Build artifacts
 /build/
 /CMakeFiles/
@@ -16,3 +17,46 @@
 # User settings
 *.user
 *.suo
+=======
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# debug information files
+*.dwo
+>>>>>>> db1e4379c79421882adc34273d8c6099fdf0eedb
