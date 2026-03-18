@@ -10,6 +10,7 @@
 #include <memory>
 #include <random>
 #include <sstream>
+#include <stdexcept>
 #include <thread>
 
 namespace std {
@@ -169,24 +170,33 @@ SoldierFederate::~SoldierFederate()
     {
         if (rtiAmb_)
         {
-            if (joinedFederation_)
+            if (connectionLost_)
+            {
+                logMessage("WARN", "Skipping RTI resign and destroy because the connection was already lost.");
+            }
+            else if (joinedFederation_)
             {
                 rtiAmb_->resignFederationExecution(rti1516e::NO_ACTION);
+                joinedFederation_ = false;
                 logMessage("INFO", "Resigned from federation execution.");
-            }
 
-            try
-            {
-                rtiAmb_->destroyFederationExecution(L"SoldierFederation");
-                logMessage("INFO", "Destroyed federation SoldierFederation.");
+                try
+                {
+                    rtiAmb_->destroyFederationExecution(L"SoldierFederation");
+                    logMessage("INFO", "Destroyed federation SoldierFederation.");
+                }
+                catch (const FederationExecutionDoesNotExist&)
+                {
+                    logMessage("INFO", "Federation already destroyed.");
+                }
+                catch (const FederatesCurrentlyJoined&)
+                {
+                    logMessage("INFO", "Federation still has joined federates; destroy skipped.");
+                }
             }
-            catch (const FederationExecutionDoesNotExist&)
+            else
             {
-                logMessage("INFO", "Federation already destroyed.");
-            }
-            catch (const FederatesCurrentlyJoined&)
-            {
-                logMessage("INFO", "Federation still has joined federates; destroy skipped.");
+                logMessage("INFO", "Skipping resign because the federate never fully joined.");
             }
         }
     }
@@ -251,6 +261,74 @@ void SoldierFederate::logMessage(const std::string& level, const std::string& me
     logFile_ << "[" << timestampForLogLine() << "] [" << level << "] [" << federateName_
              << "] " << message << "\n";
     logFile_.flush();
+}
+
+void SoldierFederate::connectionLost(const std::wstring& faultDescription)
+{
+    connectionLost_ = true;
+    joinedFederation_ = false;
+    localSoldier_.alive = false;
+    shutdownReason_ = "RTI connection lost: " + toNarrow(faultDescription);
+    logMessage("ERROR", shutdownReason_);
+}
+
+void SoldierFederate::objectInstanceNameReservationSucceeded(const std::wstring& objectInstanceName)
+{
+    if (objectInstanceName == pendingObjectInstanceName_)
+    {
+        objectInstanceNameReserved_ = true;
+        objectInstanceNameReservationPending_ = false;
+    }
+
+    logMessage("INFO", "Object instance name reserved: " + toNarrow(objectInstanceName) + ".");
+}
+
+void SoldierFederate::objectInstanceNameReservationFailed(const std::wstring& objectInstanceName)
+{
+    if (objectInstanceName == pendingObjectInstanceName_)
+    {
+        objectInstanceNameReserved_ = false;
+        objectInstanceNameReservationPending_ = false;
+    }
+
+    shutdownReason_ = "Object instance name reservation failed: " + toNarrow(objectInstanceName);
+    logMessage("ERROR", shutdownReason_);
+}
+
+void SoldierFederate::reserveLocalObjectInstanceName(const std::wstring& objectInstanceName)
+{
+    pendingObjectInstanceName_ = objectInstanceName;
+    objectInstanceNameReserved_ = false;
+    objectInstanceNameReservationPending_ = true;
+
+    logMessage("INFO", "Requesting object instance name reservation for " + toNarrow(objectInstanceName) + ".");
+    rtiAmb_->reserveObjectInstanceName(objectInstanceName);
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    while (objectInstanceNameReservationPending_)
+    {
+        rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
+
+        if (std::chrono::steady_clock::now() >= deadline)
+        {
+            objectInstanceNameReservationPending_ = false;
+            objectInstanceNameReserved_ = false;
+            shutdownReason_ = "Timed out waiting for object instance name reservation: " + toNarrow(objectInstanceName);
+            logMessage("ERROR", shutdownReason_);
+            throw std::runtime_error(shutdownReason_);
+        }
+    }
+
+    if (!objectInstanceNameReserved_)
+    {
+        if (shutdownReason_ == "normal shutdown")
+        {
+            shutdownReason_ = "Object instance name reservation was not granted: " + toNarrow(objectInstanceName);
+        }
+
+        logMessage("ERROR", shutdownReason_);
+        throw std::runtime_error(shutdownReason_);
+    }
 }
 
 void SoldierFederate::initializeRTI()
@@ -320,10 +398,12 @@ void SoldierFederate::publishAndSubscribe()
     rtiAmb_->subscribeInteractionClass(fireInteractionHandle_);
 
     // Register ourselves
-    localSoldierHandle_ = rtiAmb_->registerObjectInstance(soldierClassHandle_, std::wstring(federateName_.begin(), federateName_.end()));
+    const std::wstring objectInstanceName(federateName_.begin(), federateName_.end());
+    reserveLocalObjectInstanceName(objectInstanceName);
+    localSoldierHandle_ = rtiAmb_->registerObjectInstance(soldierClassHandle_, objectInstanceName);
     std::wcout << L"Registered local soldier object instance.\n";
     logMessage("INFO", "Published/subscribed Soldier class and FireWeapon interaction.");
-    logMessage("INFO", "Registered local soldier object instance.");
+    logMessage("INFO", "Registered local soldier object instance with reserved name " + federateName_ + ".");
 }
 
 void SoldierFederate::updateSoldierAttributes()

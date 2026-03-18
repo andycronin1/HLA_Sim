@@ -42,11 +42,17 @@ private:
     void updateSoldierAttributes();
     void sendFireInteraction(const std::string& targetName);
     void maybeFireAtEnemy();
+    void reserveLocalObjectInstanceName(const std::wstring& objectInstanceName);
 
     void openLogFile();
     void logMessage(const std::string& level, const std::string& message);
 
     // Callback overrides
+    void connectionLost(const std::wstring& faultDescription) override;
+
+    void objectInstanceNameReservationSucceeded(const std::wstring& objectInstanceName) override;
+    void objectInstanceNameReservationFailed(const std::wstring& objectInstanceName) override;
+
     void discoverObjectInstance(rti1516e::ObjectInstanceHandle theObject,
                                 rti1516e::ObjectClassHandle theObjectClass,
                                 const std::wstring& objectName) override;
@@ -87,4 +93,8 @@ private:
     std::string logFilePath_;
     std::string shutdownReason_ = "normal shutdown";
     bool joinedFederation_ = false;
+    bool connectionLost_ = false;
+    std::wstring pendingObjectInstanceName_;
+    bool objectInstanceNameReservationPending_ = false;
+    bool objectInstanceNameReserved_ = false;
 };
