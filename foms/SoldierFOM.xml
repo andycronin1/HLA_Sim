@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objectModel xsi:schemaLocation="http://standards.ieee.org/IEEE1516-2010 http://standards.ieee.org/downloads/1516/1516.2-2010/IEEE1516-DIF-2010.xsd" xmlns="http://standards.ieee.org/IEEE1516-2010" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelIdentification>
+    <name>SoldierFOM</name>
+    <type>FOM</type>
+    <version>1.0</version>
+    <modificationDate>2026-03-13</modificationDate>
+    <securityClassification>Unclassified</securityClassification>
+    <purpose>Example FOM for Soldier Simulation</purpose>
+    <applicationDomain>Simulation</applicationDomain>
+    <description>Basic FOM for soldier entities with position, health, and fire interactions.</description>
+  </modelIdentification>
+
+  <switches>
+    <autoProvide isEnabled="true"/>
+    <conveyRegionDesignatorSets isEnabled="true"/>
+    <conveyProducingFederate isEnabled="true"/>
+    <attributeScopeAdvisory isEnabled="true"/>
+    <attributeRelevanceAdvisory isEnabled="true"/>
+    <objectClassRelevanceAdvisory isEnabled="true"/>
+    <interactionRelevanceAdvisory isEnabled="true"/>
+    <serviceReporting isEnabled="true"/>
+    <exceptionReporting isEnabled="true"/>
+    <delaySubscriptionEvaluation isEnabled="true"/>
+    <automaticResignAction resignAction="CancelThenDeleteThenDivest"/>
+  </switches>
+
+  <objects>
+    <objectClass>
+      <name>HLAobjectRoot</name>
+      <objectClass>
+        <name>Soldier</name>
+        <sharing>PublishSubscribe</sharing>
+        <attribute>
+          <name>positionX</name>
+          <dataType>HLAfloat64BE</dataType>
+          <updateType>Conditional</updateType>
+          <updateCondition>On change</updateCondition>
+          <ownership>NoTransfer</ownership>
+          <sharing>PublishSubscribe</sharing>
+          <transportation>HLAbestEffort</transportation>
+          <order>Receive</order>
+        </attribute>
+        <attribute>
+          <name>positionY</name>
+          <dataType>HLAfloat64BE</dataType>
+          <updateType>Conditional</updateType>
+          <updateCondition>On change</updateCondition>
+          <ownership>NoTransfer</ownership>
+          <sharing>PublishSubscribe</sharing>
+          <transportation>HLAbestEffort</transportation>
+          <order>Receive</order>
+        </attribute>
+        <attribute>
+          <name>positionZ</name>
+          <dataType>HLAfloat64BE</dataType>
+          <updateType>Conditional</updateType>
+          <updateCondition>On change</updateCondition>
+          <ownership>NoTransfer</ownership>
+          <sharing>PublishSubscribe</sharing>
+          <transportation>HLAbestEffort</transportation>
+          <order>Receive</order>
+        </attribute>
+        <attribute>
+          <name>health</name>
+          <dataType>HLAinteger32BE</dataType>
+          <updateType>Conditional</updateType>
+          <updateCondition>On change</updateCondition>
+          <ownership>NoTransfer</ownership>
+          <sharing>PublishSubscribe</sharing>
+          <transportation>HLAbestEffort</transportation>
+          <order>Receive</order>
+        </attribute>
+      </objectClass>
+    </objectClass>
+  </objects>
+
+  <interactions>
+    <interactionClass>
+      <name>HLAinteractionRoot</name>
+      <interactionClass>
+        <name>FireWeapon</name>
+        <sharing>PublishSubscribe</sharing>
+        <transportation>HLAbestEffort</transportation>
+        <order>Receive</order>
+        <parameter>
+          <name>targetName</name>
+          <dataType>HLAunicodeString</dataType>
+        </parameter>
+        <parameter>
+          <name>damage</name>
+          <dataType>HLAinteger32BE</dataType>
+        </parameter>
+      </interactionClass>
+    </interactionClass>
+  </interactions>
+</objectModel>

@@ -1,0 +1,18 @@
+# Build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/*.cmake
+/*.obj
+/*.o
+/*.lib
+/*.exp
+/*.pdb
+/*.exe
+
+# Visual Studio
+/.vs/
+
+# User settings
+*.user
+*.suo
