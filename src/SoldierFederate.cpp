@@ -43,6 +43,9 @@ namespace
 constexpr uint8_t kDeadReckoningStatic = 1;
 constexpr uint8_t kForceFriendly = 1;
 constexpr uint8_t kMarkingAscii = 1;
+constexpr double kEngagementRangeMeters = 5.0;
+constexpr double kEngagementRangeMetersSquared = kEngagementRangeMeters * kEngagementRangeMeters;
+constexpr std::chrono::milliseconds kShotCooldown(1000);
 
 struct EntityTypeData
 {
@@ -981,6 +984,65 @@ bool SoldierFederate::initializeSpawnFromRemoteEntities()
     return false;
 }
 
+void SoldierFederate::engageNearbyTargets()
+{
+    const auto now = std::chrono::steady_clock::now();
+    if (now < nextShotTime_)
+    {
+        return;
+    }
+
+    const SoldierState* selectedTarget = nullptr;
+    double selectedDistanceSquared = kEngagementRangeMetersSquared;
+    double selectedDx = 0.0;
+    double selectedDy = 0.0;
+
+    for (const auto& kv : knownSoldiers_)
+    {
+        if (kv.first == localSoldierHandle_)
+        {
+            continue;
+        }
+
+        const SoldierState& candidate = kv.second;
+        if (!candidate.hasSpatial)
+        {
+            continue;
+        }
+
+        const double dx = candidate.x - localSoldier_.x;
+        const double dy = candidate.y - localSoldier_.y;
+        const double dz = candidate.z - localSoldier_.z;
+        const double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+        if (distanceSquared <= selectedDistanceSquared)
+        {
+            selectedTarget = &candidate;
+            selectedDistanceSquared = distanceSquared;
+            selectedDx = dx;
+            selectedDy = dy;
+        }
+    }
+
+    if (selectedTarget == nullptr)
+    {
+        return;
+    }
+
+    if (std::fabs(selectedDx) > 0.0001 || std::fabs(selectedDy) > 0.0001)
+    {
+        localSoldier_.psi = static_cast<float>(std::atan2(selectedDy, selectedDx));
+    }
+
+    nextShotTime_ = now + kShotCooldown;
+
+    const double distanceMeters = std::sqrt(selectedDistanceSquared);
+    const std::string message = "Shot fired at " + selectedTarget->objectName +
+                                " distance=" + std::to_string(distanceMeters) + "m.";
+    logMessage("INFO", message);
+    std::cout << message << "\n";
+}
+
 void SoldierFederate::mainLoop()
 {
     std::wcout << L"Entering main loop. Press Ctrl+C to exit.\n";
@@ -1004,6 +1066,7 @@ void SoldierFederate::mainLoop()
                 localSoldier_.psi = static_cast<float>(std::atan2(dy, dx));
             }
 
+            engageNearbyTargets();
             updateSoldierAttributes();
 
             rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);

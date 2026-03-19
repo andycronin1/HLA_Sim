@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <map>
@@ -53,6 +54,8 @@ private:
     void openLogFile();
     void logMessage(const std::string& level, const std::string& message);
 
+    void engageNearbyTargets();
+
     bool initializeSpawnFromRemoteEntities();
     bool tryGetRemoteSpawnReference(SoldierState& remoteState) const;
 
@@ -98,4 +101,5 @@ private:
     std::wstring pendingObjectInstanceName_;
     bool objectInstanceNameReservationPending_ = false;
     bool objectInstanceNameReserved_ = false;
+    std::chrono::steady_clock::time_point nextShotTime_{};
 };
