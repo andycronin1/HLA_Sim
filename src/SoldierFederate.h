@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <map>
@@ -16,9 +17,9 @@ struct SoldierState
 {
     std::string objectName;
     std::string marking;
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
+    double x = -73.94;
+    double y = 40.7;
+    double z = 24.0;
     float psi = 0.0f;
     float theta = 0.0f;
     float phi = 0.0f;
@@ -38,7 +39,7 @@ public:
     void run();
 
 private:
-    // HLA setup
+    // HLA setup 
     void initializeRTI();
     void createOrJoinFederation();
     void publishAndSubscribe();
@@ -52,6 +53,11 @@ private:
 
     void openLogFile();
     void logMessage(const std::string& level, const std::string& message);
+
+    void engageNearbyTargets();
+
+    bool initializeSpawnFromRemoteEntities();
+    bool tryGetRemoteSpawnReference(SoldierState& remoteState) const;
 
     // Callback overrides
     void connectionLost(const std::wstring& faultDescription) override;
@@ -95,4 +101,5 @@ private:
     std::wstring pendingObjectInstanceName_;
     bool objectInstanceNameReservationPending_ = false;
     bool objectInstanceNameReserved_ = false;
+    std::chrono::steady_clock::time_point nextShotTime_{};
 };

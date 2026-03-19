@@ -1,0 +1,98 @@
+[2026-03-19 15:37:20] [INFO] [dave] Log file created at logs\dave_20260319_153720.log
+[2026-03-19 15:37:20] [INFO] [dave] Starting federate process.
+[2026-03-19 15:37:20] [INFO] [dave] Creating RTI ambassador.
+[2026-03-19 15:37:22] [INFO] [dave] Connected to RTI.
+[2026-03-19 15:37:22] [INFO] [dave] Using federation MAK-ONE-2025.
+[2026-03-19 15:37:22] [INFO] [dave] Using FOM module C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml.
+[2026-03-19 15:37:23] [INFO] [dave] Federation already exists. Joining existing federation.
+[2026-03-19 15:37:23] [INFO] [dave] Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).
+[2026-03-19 15:37:41] [INFO] [dave] Joined federation as dave.
+[2026-03-19 15:37:41] [INFO] [dave] Using RPR object class: HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human
+[2026-03-19 15:37:41] [INFO] [dave] Requested initial Human attribute updates for spawn seeding.
+[2026-03-19 15:37:41] [INFO] [dave] Requesting object instance name reservation for dave.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:0 handle=16777218.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:100 handle=16777225.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:101 handle=16777228.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:103 handle=16777233.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:104 handle=16777236.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:105 handle=16777239.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:107 handle=16777244.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:108 handle=16777247.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:109 handle=16777250.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:11 handle=16777253.
+[2026-03-19 15:37:42] [INFO] [dave] Discovered entity=VRF65538:110 handle=16777256.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:111 handle=16777259.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:113 handle=16777264.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:116 handle=16777269.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:118 handle=16777274.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:119 handle=16777277.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:12 handle=16777280.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:120 handle=16777283.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:121 handle=16777286.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:122 handle=16777289.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:124 handle=16777302.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:126 handle=16777307.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:127 handle=16777310.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:128 handle=16777313.
+[2026-03-19 15:37:43] [INFO] [dave] Discovered entity=VRF65538:129 handle=16777316.
+[2026-03-19 15:37:43] [INFO] [dave] Object instance name reserved: dave.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:0 at x=1338892.671570 y=-4652602.960317 z=4138352.062423.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:100 at x=1338893.823242 y=-4652601.555383 z=4138353.237577.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:101 at x=1338869.468680 y=-4652758.687714 z=4138185.537264.
+[2026-03-19 15:37:43] [INFO] [dave] Published/subscribed RPR Human attributes.
+[2026-03-19 15:37:43] [INFO] [dave] Registered local human object instance with reserved name dave.
+[2026-03-19 15:37:43] [INFO] [dave] Initialization completed successfully.
+[2026-03-19 15:37:43] [INFO] [dave] Run started.
+[2026-03-19 15:37:43] [INFO] [dave] Initialized spawn from remote entity VRF65538:0 at x=1338892.671570 y=-4652602.960317 z=4138352.062423.
+[2026-03-19 15:37:43] [INFO] [dave] Entering main loop.
+[2026-03-19 15:37:43] [INFO] [dave] Shot fired at VRF65538:0 distance=0.508867m.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:103 at x=1338900.288927 y=-4652609.358265 z=4138342.564020.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:105 at x=1338906.285391 y=-4652594.386095 z=4138357.211452.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:107 at x=1338901.046793 y=-4652596.417337 z=4138356.625314.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:108 at x=1338908.969968 y=-4652610.351779 z=4138338.604617.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:11 at x=1338895.573888 y=-4652607.649243 z=4138345.916479.
+[2026-03-19 15:37:43] [INFO] [dave] Received first Spatial for VRF65538:110 at x=1338912.840194 y=-4652594.701769 z=4138354.818265.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:111 at x=1338899.038817 y=-4652596.223584 z=4138357.486865.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:113 at x=1338897.311504 y=-4652601.258018 z=4138352.418311.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:116 at x=1338912.486872 y=-4652608.541314 z=4138339.415337.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:104 at x=1338908.967100 y=-4652533.329259 z=4138424.834985.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:119 at x=1338888.838455 y=-4652746.711170 z=4138192.687925.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:12 at x=1338911.414211 y=-4652595.079857 z=4138354.832721.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:109 at x=1338908.791198 y=-4652532.836297 z=4138425.442066.
+[2026-03-19 15:37:44] [INFO] [dave] Received first Spatial for VRF65538:118 at x=1338893.453699 y=-4652604.085576 z=4138350.528880.
+[2026-03-19 15:37:45] [INFO] [dave] Shot fired at VRF65538:0 distance=1.071697m.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:120 at x=1338883.236900 y=-4652752.138067 z=4138188.442810.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:122 at x=1338909.904395 y=-4652532.989589 z=4138424.913110.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:124 at x=1338910.273424 y=-4652593.505650 z=4138356.966813.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:127 at x=1338896.462513 y=-4652608.174793 z=4138345.072868.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:126 at x=1338916.286027 y=-4652607.062125 z=4138339.978635.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:129 at x=1338894.682426 y=-4652601.932921 z=4138352.518246.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:121 at x=1338900.658663 y=-4652609.978690 z=4138341.766922.
+[2026-03-19 15:37:45] [INFO] [dave] Received first Spatial for VRF65538:128 at x=1338891.796002 y=-4652602.828897 z=4138352.545880.
+[2026-03-19 15:37:46] [INFO] [dave] Shot fired at VRF65538:128 distance=1.198045m.
+[2026-03-19 15:37:47] [INFO] [dave] Shot fired at VRF65538:0 distance=1.528036m.
+[2026-03-19 15:37:49] [INFO] [dave] Shot fired at VRF65538:0 distance=1.540065m.
+[2026-03-19 15:37:50] [INFO] [dave] Shot fired at VRF65538:0 distance=1.910441m.
+[2026-03-19 15:37:52] [INFO] [dave] Shot fired at VRF65538:0 distance=1.584635m.
+[2026-03-19 15:37:53] [INFO] [dave] Shot fired at VRF65538:118 distance=1.857039m.
+[2026-03-19 15:37:54] [INFO] [dave] Shot fired at VRF65538:118 distance=2.344601m.
+[2026-03-19 15:37:55] [INFO] [dave] Shot fired at VRF65538:128 distance=2.208028m.
+[2026-03-19 15:37:56] [INFO] [dave] Shot fired at VRF65538:128 distance=2.683873m.
+[2026-03-19 15:37:58] [INFO] [dave] Shot fired at VRF65538:128 distance=2.430764m.
+[2026-03-19 15:37:59] [INFO] [dave] Shot fired at VRF65538:128 distance=2.734132m.
+[2026-03-19 15:38:00] [INFO] [dave] Shot fired at VRF65538:118 distance=3.073262m.
+[2026-03-19 15:38:01] [INFO] [dave] Shot fired at VRF65538:128 distance=2.633115m.
+[2026-03-19 15:38:03] [INFO] [dave] Shot fired at VRF65538:118 distance=3.026400m.
+[2026-03-19 15:38:04] [INFO] [dave] Shot fired at VRF65538:118 distance=3.122566m.
+[2026-03-19 15:38:05] [INFO] [dave] Shot fired at VRF65538:128 distance=3.030728m.
+[2026-03-19 15:38:06] [INFO] [dave] Shot fired at VRF65538:128 distance=2.705706m.
+[2026-03-19 15:38:07] [INFO] [dave] Shot fired at VRF65538:128 distance=2.222669m.
+[2026-03-19 15:38:09] [INFO] [dave] Shot fired at VRF65538:128 distance=2.382348m.
+[2026-03-19 15:38:10] [INFO] [dave] Shot fired at VRF65538:128 distance=2.899443m.
+[2026-03-19 15:38:11] [INFO] [dave] Shot fired at VRF65538:128 distance=2.669846m.
+[2026-03-19 15:38:12] [INFO] [dave] Shot fired at VRF65538:128 distance=2.737374m.
+[2026-03-19 15:38:13] [INFO] [dave] Shot fired at VRF65538:128 distance=2.683926m.
+[2026-03-19 15:38:17] [INFO] [dave] Shot fired at VRF65538:128 distance=2.748446m.
+[2026-03-19 15:38:18] [INFO] [dave] Shot fired at VRF65538:128 distance=3.171639m.
+[2026-03-19 15:38:19] [INFO] [dave] Shot fired at VRF65538:128 distance=2.513772m.
+[2026-03-19 15:38:20] [INFO] [dave] Shot fired at VRF65538:128 distance=3.352611m.

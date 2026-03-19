@@ -43,6 +43,9 @@ namespace
 constexpr uint8_t kDeadReckoningStatic = 1;
 constexpr uint8_t kForceFriendly = 1;
 constexpr uint8_t kMarkingAscii = 1;
+constexpr double kEngagementRangeMeters = 5.0;
+constexpr double kEngagementRangeMetersSquared = kEngagementRangeMeters * kEngagementRangeMeters;
+constexpr std::chrono::milliseconds kShotCooldown(1000);
 
 struct EntityTypeData
 {
@@ -771,7 +774,7 @@ void SoldierFederate::createOrJoinFederation()
     }
     catch (const FederationExecutionAlreadyExists&)
     {
-        std::wcout << L"Federation already exists, joining existing federation.\n";
+        std::wcout << L"Federation already exists, joining existing federation: " << federationExecutionName_ << L"\n ";
         logMessage("INFO", "Federation already exists. Joining existing federation.");
     }
 
@@ -866,6 +869,23 @@ void SoldierFederate::publishAndSubscribe()
     rtiAmb_->publishObjectClassAttributes(humanClassHandle_, attributes);
     rtiAmb_->subscribeObjectClassAttributes(humanClassHandle_, attributes);
 
+    AttributeHandleSet spawnSeedAttributes;
+    spawnSeedAttributes.insert(spatialHandle_);
+    spawnSeedAttributes.insert(entityIdentifierHandle_);
+    spawnSeedAttributes.insert(forceIdentifierHandle_);
+    spawnSeedAttributes.insert(markingHandle_);
+
+    try
+    {
+        rtiAmb_->requestAttributeValueUpdate(humanClassHandle_, spawnSeedAttributes, VariableLengthData());
+        logMessage("INFO", "Requested initial Human attribute updates for spawn seeding.");
+    }
+    catch (const Exception& ex)
+    {
+        logMessage("WARN", "Initial class attribute update request failed: " + toNarrow(ex.what()));
+    }
+    
+
     const std::wstring objectInstanceName = toWide(federateName_);
     reserveLocalObjectInstanceName(objectInstanceName);
     localSoldierHandle_ = rtiAmb_->registerObjectInstance(humanClassHandle_, objectInstanceName);
@@ -893,6 +913,136 @@ void SoldierFederate::updateSoldierAttributes()
     rtiAmb_->updateAttributeValues(localSoldierHandle_, updates, VariableLengthData());
 }
 
+bool SoldierFederate::tryGetRemoteSpawnReference(SoldierState& remoteState) const
+{
+    for (const auto& kv : knownSoldiers_)
+    {
+        if (kv.first == localSoldierHandle_)
+        {
+            continue;
+        }
+
+        const SoldierState& state = kv.second;
+        if (!state.hasSpatial)
+        {
+            continue;
+        }
+
+        remoteState = state;
+        return true;
+    }
+
+    return false;
+}
+
+bool SoldierFederate::initializeSpawnFromRemoteEntities()
+{
+    AttributeHandleSet spawnSeedAttributes;
+    spawnSeedAttributes.insert(spatialHandle_);
+    spawnSeedAttributes.insert(entityIdentifierHandle_);
+    spawnSeedAttributes.insert(forceIdentifierHandle_);
+    spawnSeedAttributes.insert(markingHandle_);
+
+    try
+    {
+        rtiAmb_->requestAttributeValueUpdate(humanClassHandle_, spawnSeedAttributes, VariableLengthData());
+    }
+    catch (const Exception& ex)
+    {
+        logMessage("WARN", "Spawn-time class attribute update request failed: " + toNarrow(ex.what()));
+    }
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+
+    while (!connectionLost_ && std::chrono::steady_clock::now() < deadline)
+    {
+        SoldierState remoteState;
+        if (tryGetRemoteSpawnReference(remoteState))
+        {
+            localSoldier_.x = remoteState.x;
+            localSoldier_.y = remoteState.y;
+            localSoldier_.z = remoteState.z;
+            localSoldier_.hasSpatial = true;
+
+            logMessage(
+                "INFO",
+                "Initialized spawn from remote entity " + remoteState.objectName +
+                " at x=" + std::to_string(localSoldier_.x) +
+                " y=" + std::to_string(localSoldier_.y) +
+                " z=" + std::to_string(localSoldier_.z) + ".");
+
+            return true;
+        }
+
+        rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    logMessage(
+        "WARN",
+        "No remote entity with spatial data was discovered before spawn timeout. Keeping current local spawn.");
+    return false;
+}
+
+void SoldierFederate::engageNearbyTargets()
+{
+    const auto now = std::chrono::steady_clock::now();
+    if (now < nextShotTime_)
+    {
+        return;
+    }
+
+    const SoldierState* selectedTarget = nullptr;
+    double selectedDistanceSquared = kEngagementRangeMetersSquared;
+    double selectedDx = 0.0;
+    double selectedDy = 0.0;
+
+    for (const auto& kv : knownSoldiers_)
+    {
+        if (kv.first == localSoldierHandle_)
+        {
+            continue;
+        }
+
+        const SoldierState& candidate = kv.second;
+        if (!candidate.hasSpatial)
+        {
+            continue;
+        }
+
+        const double dx = candidate.x - localSoldier_.x;
+        const double dy = candidate.y - localSoldier_.y;
+        const double dz = candidate.z - localSoldier_.z;
+        const double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+        if (distanceSquared <= selectedDistanceSquared)
+        {
+            selectedTarget = &candidate;
+            selectedDistanceSquared = distanceSquared;
+            selectedDx = dx;
+            selectedDy = dy;
+        }
+    }
+
+    if (selectedTarget == nullptr)
+    {
+        return;
+    }
+
+    if (std::fabs(selectedDx) > 0.0001 || std::fabs(selectedDy) > 0.0001)
+    {
+        localSoldier_.psi = static_cast<float>(std::atan2(selectedDy, selectedDx));
+    }
+
+    nextShotTime_ = now + kShotCooldown;
+
+    const double distanceMeters = std::sqrt(selectedDistanceSquared);
+    const std::string message = "Shot fired at " + selectedTarget->objectName +
+                                " distance=" + std::to_string(distanceMeters) + "m.";
+    logMessage("INFO", message);
+    std::cout << message << "\n";
+}
+
 void SoldierFederate::mainLoop()
 {
     std::wcout << L"Entering main loop. Press Ctrl+C to exit.\n";
@@ -916,6 +1066,7 @@ void SoldierFederate::mainLoop()
                 localSoldier_.psi = static_cast<float>(std::atan2(dy, dx));
             }
 
+            engageNearbyTargets();
             updateSoldierAttributes();
 
             rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
@@ -953,6 +1104,8 @@ void SoldierFederate::run()
 
     try
     {
+        initializeSpawnFromRemoteEntities();
+        updateSoldierAttributes();
         mainLoop();
         logMessage("INFO", "Run completed.");
     }
@@ -984,6 +1137,21 @@ void SoldierFederate::discoverObjectInstance(rti1516e::ObjectInstanceHandle theO
     state.objectName = toNarrow(objectName);
     state.marking = state.objectName;
     knownSoldiers_[theObject] = state;
+
+    AttributeHandleSet spawnSeedAttributes;
+    spawnSeedAttributes.insert(spatialHandle_);
+    spawnSeedAttributes.insert(entityIdentifierHandle_);
+    spawnSeedAttributes.insert(forceIdentifierHandle_);
+    spawnSeedAttributes.insert(markingHandle_);
+
+    try
+    {
+        rtiAmb_->requestAttributeValueUpdate(theObject, spawnSeedAttributes, VariableLengthData());
+    }
+    catch (const Exception& ex)
+    {
+        logMessage("WARN", "Per-object attribute update request failed for " + state.objectName + ": " + toNarrow(ex.what()));
+    }
 
     std::wcout << L"Discovered entity: " << objectName << L" (handle=" << theObject.toString() << L")\n";
     logMessage("INFO", "Discovered entity=" + state.objectName + " handle=" + toNarrow(theObject.toString()) + ".");
@@ -1031,6 +1199,7 @@ void SoldierFederate::reflectAttributeValues(rti1516e::ObjectInstanceHandle theO
             }
             else if (kv.first == spatialHandle_)
             {
+                const bool firstSpatialForObject = !state.hasSpatial;
                 const SpatialData spatial = decodeSpatial(kv.second);
                 state.x = spatial.x;
                 state.y = spatial.y;
@@ -1039,6 +1208,16 @@ void SoldierFederate::reflectAttributeValues(rti1516e::ObjectInstanceHandle theO
                 state.theta = spatial.theta;
                 state.phi = spatial.phi;
                 state.hasSpatial = true;
+
+                if (firstSpatialForObject)
+                {
+                    logMessage(
+                        "INFO",
+                        "Received first Spatial for " + state.objectName +
+                            " at x=" + std::to_string(state.x) +
+                            " y=" + std::to_string(state.y) +
+                            " z=" + std::to_string(state.z) + ".");
+                }
             }
             else if (kv.first == entityTypeHandle_)
             {

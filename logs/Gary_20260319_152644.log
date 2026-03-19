@@ -1,0 +1,69 @@
+[2026-03-19 15:26:44] [INFO] [Gary] Log file created at logs\Gary_20260319_152644.log
+[2026-03-19 15:26:44] [INFO] [Gary] Starting federate process.
+[2026-03-19 15:26:44] [INFO] [Gary] Creating RTI ambassador.
+[2026-03-19 15:26:46] [INFO] [Gary] Connected to RTI.
+[2026-03-19 15:26:46] [INFO] [Gary] Using federation MAK-ONE-2025.
+[2026-03-19 15:26:46] [INFO] [Gary] Using FOM module C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml.
+[2026-03-19 15:26:46] [INFO] [Gary] Federation already exists. Joining existing federation.
+[2026-03-19 15:26:46] [INFO] [Gary] Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).
+[2026-03-19 15:27:05] [INFO] [Gary] Joined federation as Gary.
+[2026-03-19 15:27:05] [INFO] [Gary] Using RPR object class: HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human
+[2026-03-19 15:27:05] [INFO] [Gary] Requested initial Human attribute updates for spawn seeding.
+[2026-03-19 15:27:05] [INFO] [Gary] Requesting object instance name reservation for Gary.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:0 handle=16777218.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:100 handle=16777225.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:101 handle=16777228.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:103 handle=16777233.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:104 handle=16777236.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:105 handle=16777239.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:107 handle=16777244.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:108 handle=16777247.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:109 handle=16777250.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:11 handle=16777253.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:110 handle=16777256.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:111 handle=16777259.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:113 handle=16777264.
+[2026-03-19 15:27:05] [INFO] [Gary] Discovered entity=VRF65538:116 handle=16777269.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:118 handle=16777274.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:119 handle=16777277.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:12 handle=16777280.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:120 handle=16777283.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:121 handle=16777286.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:122 handle=16777289.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:124 handle=16777302.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:126 handle=16777307.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:127 handle=16777310.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:128 handle=16777313.
+[2026-03-19 15:27:06] [INFO] [Gary] Discovered entity=VRF65538:129 handle=16777316.
+[2026-03-19 15:27:06] [INFO] [Gary] Object instance name reserved: Gary.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:0 at x=1338892.671570 y=-4652602.960317 z=4138352.062423.
+[2026-03-19 15:27:06] [INFO] [Gary] Published/subscribed RPR Human attributes.
+[2026-03-19 15:27:06] [INFO] [Gary] Registered local human object instance with reserved name Gary.
+[2026-03-19 15:27:06] [INFO] [Gary] Initialization completed successfully.
+[2026-03-19 15:27:06] [INFO] [Gary] Run started.
+[2026-03-19 15:27:06] [INFO] [Gary] Initialized spawn from remote entity VRF65538:0 at x=1338892.671570 y=-4652602.960317 z=4138352.062423.
+[2026-03-19 15:27:06] [INFO] [Gary] Entering main loop.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:100 at x=1338893.823242 y=-4652601.555383 z=4138353.237577.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:101 at x=1338869.468680 y=-4652758.687714 z=4138185.537264.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:103 at x=1338900.288927 y=-4652609.358265 z=4138342.564020.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:105 at x=1338906.285391 y=-4652594.386095 z=4138357.211452.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:107 at x=1338901.046793 y=-4652596.417337 z=4138356.625314.
+[2026-03-19 15:27:06] [INFO] [Gary] Received first Spatial for VRF65538:108 at x=1338908.969968 y=-4652610.351779 z=4138338.604617.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:109 at x=1338908.791198 y=-4652532.836297 z=4138425.442066.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:11 at x=1338895.573888 y=-4652607.649243 z=4138345.916479.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:111 at x=1338899.038817 y=-4652596.223584 z=4138357.486865.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:113 at x=1338897.311504 y=-4652601.258018 z=4138352.418311.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:116 at x=1338912.486872 y=-4652608.541314 z=4138339.415337.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:119 at x=1338888.838455 y=-4652746.711170 z=4138192.687925.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:12 at x=1338911.414211 y=-4652595.079857 z=4138354.832721.
+[2026-03-19 15:27:07] [INFO] [Gary] Received first Spatial for VRF65538:120 at x=1338883.236900 y=-4652752.138067 z=4138188.442810.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:121 at x=1338900.658663 y=-4652609.978690 z=4138341.766922.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:122 at x=1338909.904395 y=-4652532.989589 z=4138424.913110.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:124 at x=1338910.273424 y=-4652593.505650 z=4138356.966813.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:126 at x=1338916.286027 y=-4652607.062125 z=4138339.978635.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:127 at x=1338896.462513 y=-4652608.174793 z=4138345.072868.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:128 at x=1338891.796002 y=-4652602.828897 z=4138352.545880.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:129 at x=1338894.682426 y=-4652601.932921 z=4138352.518246.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:104 at x=1338908.967100 y=-4652533.329259 z=4138424.834985.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:110 at x=1338912.840194 y=-4652594.701769 z=4138354.818265.
+[2026-03-19 15:27:08] [INFO] [Gary] Received first Spatial for VRF65538:118 at x=1338893.453699 y=-4652604.085576 z=4138350.528880.
