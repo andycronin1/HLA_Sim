@@ -1,37 +1,40 @@
-# HLA Soldier Federate (MAK RTI)
+# HLA Soldier Federate (RPR FOM / MAK RTI)
 
-This project provides a **basic HLA 1516e federate** that can interact with the **MAK RTI** (e.g., MAK RTI 5.0.1) to simulate **soldiers** that can **move**, **fire**, and **kill** each other.
+This project now uses the **RPR FOM v2.0 (HLA 1516-2010)** model so it can interoperate with VR-Forces on MAK RTI.
 
-> ⚠️ This project is a template/skeleton. You will need a valid MAK RTI installation (and appropriate licensing) to build and run.
+## What This Sim Publishes/Subscribes
 
----
+The federate publishes and subscribes this RPR object class:
 
-## ✅ Features
+- `HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human`
 
-- Registers a `Soldier` object class with attributes like position and health
-- Publishes a `FireWeapon` interaction to apply damage to other soldiers
-- Subscribes to updates about all soldiers in the federation
-- Performs a simple tick loop where each soldier may fire at others
+It updates these inherited RPR attributes:
 
----
+- `EntityType`
+- `EntityIdentifier`
+- `Spatial`
+- `ForceIdentifier`
+- `Marking`
 
-## 🧩 Requirements
+This lets VR-Forces discover this entity as an RPR lifeform when both are in the same federation and using compatible FOM modules.
 
-- MAK RTI (e.g., **MAK RTI 5.0.1**) installed
-- C++17 compatible compiler (MSVC or GCC/Clang)
-- CMake (>= 3.16)
+## RPR FOM In This Repo
 
-> Tip: Set `MAK_RTI_HOME` to your MAK RTI install directory (e.g. `C:\MAK\makRti5.0.1`). This has been set permanently in the system environment variables.
+The VR-Forces RPR module has been copied into this repository at:
 
----
+- `foms/RPR_FOM_v2.0_1516-2010.xml`
 
-## 🚀 Build and Run (Windows)
+By default, the federate loads that file.
 
-1. Ensure environment variables are set (already done permanently):
+## Requirements
 
-   The `MAK_RTI_HOME` is set to `C:\MAK\makRti5.0.1`.
+- MAK RTI (for example, MAK RTI 5.x)
+- C++17 compiler
+- CMake 3.16+
 
-2. Build:
+You also need `MAK_RTI_HOME` set in your environment.
+
+## Build (Windows)
 
 ```powershell
 mkdir build
@@ -40,33 +43,52 @@ cmake -S ..
 cmake --build .
 ```
 
-3. Run (from build folder):
+## Run
+
+Run from the `build` directory:
 
 ```powershell
-.\Debug\SoldierFederate.exe
+.\Debug\SoldierFederate.exe Alpha
 ```
 
----
+Start additional instances with unique names:
 
-## 🧠 How it works
+```powershell
+.\Debug\SoldierFederate.exe Bravo
+.\Debug\SoldierFederate.exe Charlie
+```
 
-- On startup, the federate creates or joins a federation execution called `SoldierFederation`.
-- It registers a `Soldier` object and periodically updates its position + health.
-- It listens for `FireWeapon` interactions and applies damage.
+## Interop Settings
 
-> This template is intentionally minimal so you can extend it with synthetic terrain, better targeting, and AI behaviors.
+Set these environment variables so this sim matches your VR-Forces session:
 
----
+- `FEDERATION_NAME`: federation execution name (default: `SoldierFederation`)
+- `RPR_FOM_PATH`: optional override for RPR FOM path
+- `RPR_JOIN_WITH_ADDITIONAL_FOM`: optional (`1/true`) to attempt modular FOM merge on join of an existing federation (default: disabled)
+- `RPR_SITE_ID`: optional Site ID for `EntityIdentifier` (default: `1`)
+- `RPR_APPLICATION_ID`: optional Application ID (default: `1`)
+- `RPR_ENTITY_NUMBER`: optional Entity Number (default: hash from federate name)
+- `RPR_FORCE_ID`: optional force ID (default: `1` = Friendly)
 
-## 🛠 Customization
+Example:
 
-- Add new attributes (e.g., `weaponType`, `ammoCount`)
-- Add more interactions (e.g., `SuppressiveFire`, `MedEvac`)
-- Integrate with a rendering engine or VR-Forces scenario
+```powershell
+$env:FEDERATION_NAME = "MyVrForcesFederation"
+.\Debug\SoldierFederate.exe Alpha
+```
 
----
+## Logging
 
-## 📌 Notes
+Runtime logs are written to:
 
-- This code targets HLA 1516e. If you're using HLA 1.3, you will need to adapt the APIs.
-- The RTI libraries and headers are not included in this repo.
+- `build/logs/<FederateName>_<timestamp>.log`
+
+Fatal startup/runtime exceptions are also appended to:
+
+- `build/logs/fatal.log`
+
+## Notes
+
+- The previous custom `Soldier` class and `FireWeapon` interaction path has been removed from the sim logic.
+- This federate now uses HLA encoding helper classes for RPR records/variant records, instead of raw host-endian memory copies.
+- If VR-Forces still does not display the entity, check that both federates use the same federation name and the same RPR FOM module set.
