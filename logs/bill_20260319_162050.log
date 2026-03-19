@@ -1,0 +1,92 @@
+[2026-03-19 16:20:50] [INFO] [bill] Log file created at logs\bill_20260319_162050.log
+[2026-03-19 16:20:50] [INFO] [bill] Starting federate process.
+[2026-03-19 16:20:50] [INFO] [bill] Creating RTI ambassador.
+[2026-03-19 16:20:53] [INFO] [bill] Connected to RTI.
+[2026-03-19 16:20:53] [INFO] [bill] Using federation MAK-ONE-2025.
+[2026-03-19 16:20:53] [INFO] [bill] Using FOM module C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml.
+[2026-03-19 16:20:54] [INFO] [bill] Federation already exists. Joining existing federation.
+[2026-03-19 16:20:54] [INFO] [bill] Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).
+[2026-03-19 16:21:12] [INFO] [bill] Joined federation as bill.
+[2026-03-19 16:21:12] [INFO] [bill] Using RPR object class: HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human
+[2026-03-19 16:21:13] [INFO] [bill] Published RPR interactions: HLAinteractionRoot.WeaponFire and HLAinteractionRoot.MunitionDetonation.
+[2026-03-19 16:21:13] [INFO] [bill] Requested initial Human attribute updates for spawn seeding.
+[2026-03-19 16:21:13] [INFO] [bill] Requesting object instance name reservation for bill.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1000 handle=16777332.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1003 handle=16777339.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1004 handle=16777342.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1006 handle=16777347.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1007 handle=16777350.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1008 handle=16777353.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1010 handle=16777358.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1011 handle=16777361.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1012 handle=16777364.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1013 handle=16777367.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1014 handle=16777370.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1015 handle=16777373.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1017 handle=16777378.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1020 handle=16777383.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1022 handle=16777388.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1023 handle=16777391.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1024 handle=16777394.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1025 handle=16777397.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1026 handle=16777400.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1027 handle=16777403.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1028 handle=16777406.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1030 handle=16777411.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1031 handle=16777414.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1032 handle=16777417.
+[2026-03-19 16:21:13] [INFO] [bill] Discovered entity=VRF65538:1033 handle=16777420.
+[2026-03-19 16:21:13] [INFO] [bill] Object instance name reserved: bill.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1000 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1003 at x=1338896.112599 y=-4652601.651746 z=4138352.369795.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1004 at x=1338869.468680 y=-4652758.687714 z=4138185.537264.
+[2026-03-19 16:21:13] [INFO] [bill] Published/subscribed RPR Human attributes.
+[2026-03-19 16:21:13] [INFO] [bill] Registered local human object instance with reserved name bill.
+[2026-03-19 16:21:13] [INFO] [bill] Initialization completed successfully.
+[2026-03-19 16:21:13] [INFO] [bill] Run started.
+[2026-03-19 16:21:13] [INFO] [bill] Initialized spawn from remote entity VRF65538:1000 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:21:13] [INFO] [bill] Entering main loop.
+[2026-03-19 16:21:13] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.560183m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1006 at x=1338891.786135 y=-4652602.889391 z=4138352.363727.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1007 at x=1338962.422545 y=-4652504.780301 z=4138439.247362.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1010 at x=1338894.041260 y=-4652605.302020 z=4138348.958775.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1008 at x=1338893.770704 y=-4652604.361800 z=4138350.095782.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1011 at x=1338912.869540 y=-4652594.793626 z=4138354.643800.
+[2026-03-19 16:21:13] [INFO] [bill] Received first Spatial for VRF65538:1012 at x=1338972.177195 y=-4652501.212979 z=4138440.096506.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1013 at x=1338897.552154 y=-4652601.230162 z=4138352.363726.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1014 at x=1338893.228615 y=-4652602.477972 z=4138352.366762.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1015 at x=1338913.861095 y=-4652603.663631 z=4138344.404664.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1017 at x=1338901.158111 y=-4652608.337114 z=4138343.267662.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1020 at x=1338894.311817 y=-4652606.242240 z=4138347.821767.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1022 at x=1338893.500147 y=-4652603.421580 z=4138351.232789.
+[2026-03-19 16:21:14] [INFO] [bill] Received first Spatial for VRF65538:1023 at x=1338888.838455 y=-4652746.711170 z=4138192.687925.
+[2026-03-19 16:21:15] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.427066m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1025 at x=1338883.236900 y=-4652752.138067 z=4138188.442810.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1026 at x=1338915.304551 y=-4652603.255605 z=4138344.410734.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1027 at x=1338967.215832 y=-4652503.210878 z=4138439.459676.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1028 at x=1338894.671095 y=-4652602.066553 z=4138352.369796.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1030 at x=1338896.835548 y=-4652609.588315 z=4138343.273735.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1031 at x=1338916.746055 y=-4652602.840799 z=4138344.410733.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1032 at x=1338909.984581 y=-4652595.616462 z=4138354.637734.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1033 at x=1338911.428036 y=-4652595.208433 z=4138354.643802.
+[2026-03-19 16:21:15] [INFO] [bill] Received first Spatial for VRF65538:1024 at x=1338897.281597 y=-4652600.289943 z=4138353.500734.
+[2026-03-19 16:21:16] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.675727m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:18] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.589634m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:19] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.484005m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:20] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.325512m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:21] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.755551m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:23] [INFO] [bill] Shot fired at VRF65538:1028 distance=1.141811m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:24] [INFO] [bill] Shot fired at VRF65538:1028 distance=1.287594m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:25] [INFO] [bill] Shot fired at VRF65538:1028 distance=1.276922m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:26] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.396917m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:28] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.691314m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:29] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.891865m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:30] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.392820m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:31] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.153581m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:33] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.320983m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:34] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.194610m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:35] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.219980m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:36] [INFO] [bill] Shot fired at VRF65538:1000 distance=0.974076m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:38] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.222343m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:39] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.187746m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:21:40] [INFO] [bill] Shot fired at VRF65538:1000 distance=1.105259m (RPR WeaponFire + MunitionDetonation sent).

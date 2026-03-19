@@ -1,0 +1,125 @@
+[2026-03-19 16:23:52] [INFO] [Steve] Log file created at logs\Steve_20260319_162352.log
+[2026-03-19 16:23:52] [INFO] [Steve] Starting federate process.
+[2026-03-19 16:23:52] [INFO] [Steve] Creating RTI ambassador.
+[2026-03-19 16:23:55] [INFO] [Steve] Connected to RTI.
+[2026-03-19 16:23:55] [INFO] [Steve] Using federation MAK-ONE-2025.
+[2026-03-19 16:23:55] [INFO] [Steve] Using FOM module C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml.
+[2026-03-19 16:23:55] [INFO] [Steve] Federation already exists. Joining existing federation.
+[2026-03-19 16:23:55] [INFO] [Steve] Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).
+[2026-03-19 16:24:13] [INFO] [Steve] Joined federation as Steve.
+[2026-03-19 16:24:13] [INFO] [Steve] Using RPR object class: HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human
+[2026-03-19 16:24:13] [INFO] [Steve] DamageState attribute is available and will be published.
+[2026-03-19 16:24:13] [INFO] [Steve] Published/subscribed RPR interactions: HLAinteractionRoot.WeaponFire and HLAinteractionRoot.MunitionDetonation.
+[2026-03-19 16:24:13] [INFO] [Steve] Requested initial Human attribute updates for spawn seeding.
+[2026-03-19 16:24:13] [INFO] [Steve] Requesting object instance name reservation for Steve.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1034 handle=16777432.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1037 handle=16777439.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1038 handle=16777442.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1040 handle=16777447.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1041 handle=16777450.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1042 handle=16777453.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1044 handle=16777458.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1045 handle=16777461.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1046 handle=16777464.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1047 handle=16777467.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1048 handle=16777470.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1049 handle=16777473.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1051 handle=16777478.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1054 handle=16777483.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1056 handle=16777488.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1057 handle=16777491.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1058 handle=16777494.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1059 handle=16777497.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1060 handle=16777500.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1061 handle=16777503.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1062 handle=16777506.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1064 handle=16777511.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1065 handle=16777514.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1066 handle=16777517.
+[2026-03-19 16:24:13] [INFO] [Steve] Discovered entity=VRF65538:1067 handle=16777520.
+[2026-03-19 16:24:13] [INFO] [Steve] Object instance name reserved: Steve.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1034 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1037 at x=1338896.112599 y=-4652601.651746 z=4138352.369795.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1038 at x=1338869.468680 y=-4652758.687714 z=4138185.537264.
+[2026-03-19 16:24:13] [INFO] [Steve] Published/subscribed RPR Human attributes.
+[2026-03-19 16:24:13] [INFO] [Steve] Registered local human object instance with reserved name Steve.
+[2026-03-19 16:24:13] [INFO] [Steve] Initialization completed successfully.
+[2026-03-19 16:24:13] [INFO] [Steve] Run started.
+[2026-03-19 16:24:13] [INFO] [Steve] Initialized spawn from remote entity VRF65538:1034 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:24:13] [INFO] [Steve] Entering main loop.
+[2026-03-19 16:24:13] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.401952m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1041 at x=1338962.422545 y=-4652504.780301 z=4138439.247362.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1044 at x=1338894.041260 y=-4652605.302020 z=4138348.958775.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1045 at x=1338912.869540 y=-4652594.793626 z=4138354.643800.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1046 at x=1338972.177195 y=-4652501.212979 z=4138440.096506.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1047 at x=1338897.552154 y=-4652601.230162 z=4138352.363726.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1040 at x=1338891.786135 y=-4652602.889391 z=4138352.363727.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1049 at x=1338913.861095 y=-4652603.663631 z=4138344.404664.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1051 at x=1338901.158111 y=-4652608.337114 z=4138343.267662.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1054 at x=1338894.311817 y=-4652606.242240 z=4138347.821767.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1042 at x=1338893.770704 y=-4652604.361800 z=4138350.095782.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1048 at x=1338893.228615 y=-4652602.477972 z=4138352.366762.
+[2026-03-19 16:24:13] [INFO] [Steve] Received first Spatial for VRF65538:1056 at x=1338893.500147 y=-4652603.421580 z=4138351.232789.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1060 at x=1338915.304551 y=-4652603.255605 z=4138344.410734.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1061 at x=1338967.215832 y=-4652503.210878 z=4138439.459676.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1058 at x=1338897.281597 y=-4652600.289943 z=4138353.500734.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1057 at x=1338888.838455 y=-4652746.711170 z=4138192.687925.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1064 at x=1338896.835548 y=-4652609.588315 z=4138343.273735.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1065 at x=1338916.746055 y=-4652602.840799 z=4138344.410733.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1062 at x=1338894.671095 y=-4652602.066553 z=4138352.369796.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1067 at x=1338911.428036 y=-4652595.208433 z=4138354.643802.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1059 at x=1338883.236900 y=-4652752.138067 z=4138188.442810.
+[2026-03-19 16:24:14] [INFO] [Steve] Received first Spatial for VRF65538:1066 at x=1338909.984581 y=-4652595.616462 z=4138354.637734.
+[2026-03-19 16:24:15] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.300316m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:16] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.207774m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:17] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.898370m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:19] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.148978m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:20] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.996223m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:21] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.484294m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:23] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.387693m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:24] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.085579m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:25] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.344774m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:26] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.118677m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:27] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.949465m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:29] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.454588m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:30] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.557338m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:31] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.695881m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:32] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.795667m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:34] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.862595m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:35] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.241187m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:36] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.338352m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:37] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.194551m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:38] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.721539m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:40] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.799860m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:41] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.486134m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:42] [INFO] [Steve] Shot fired at VRF65538:1034 distance=2.246309m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:43] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.717736m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:45] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.190032m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:46] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.454389m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:47] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.637417m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:48] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.795746m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:49] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.608537m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:51] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.318318m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:52] [INFO] [Steve] Shot fired at VRF65538:1034 distance=0.995054m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:53] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.288492m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:54] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.163384m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:56] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.707505m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:57] [INFO] [Steve] Shot fired at VRF65538:1034 distance=1.854944m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:58] [INFO] [Steve] Shot fired at VRF65538:1034 distance=2.561222m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:24:59] [INFO] [Steve] Shot fired at VRF65538:1058 distance=3.124743m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:00] [INFO] [Steve] Shot fired at VRF65538:1058 distance=3.182330m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:02] [INFO] [Steve] Shot fired at VRF65538:1034 distance=2.974578m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:03] [INFO] [Steve] Shot fired at VRF65538:1058 distance=2.821311m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:04] [INFO] [Steve] Shot fired at VRF65538:1058 distance=3.121287m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:05] [INFO] [Steve] Shot fired at VRF65538:1058 distance=2.944733m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:06] [INFO] [Steve] Shot fired at VRF65538:1034 distance=3.295122m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:08] [INFO] [Steve] Shot fired at VRF65538:1034 distance=2.828201m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:09] [INFO] [Steve] Shot fired at VRF65538:1034 distance=3.085934m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:10] [INFO] [Steve] Shot fired at VRF65538:1034 distance=3.581486m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:11] [INFO] [Steve] Shot fired at VRF65538:1034 distance=3.196252m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:13] [INFO] [Steve] Shot fired at VRF65538:1034 distance=3.753295m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:14] [INFO] [Steve] Shot fired at VRF65538:1034 distance=4.480709m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:16] [INFO] [Steve] Shot fired at VRF65538:1034 distance=4.974694m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:17] [INFO] [Steve] Shot fired at VRF65538:1034 distance=4.657977m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:18] [INFO] [Steve] Shot fired at VRF65538:1034 distance=4.467314m (RPR WeaponFire + MunitionDetonation sent).
+[2026-03-19 16:25:20] [INFO] [Steve] Shot fired at VRF65538:1058 distance=4.999479m (RPR WeaponFire + MunitionDetonation sent).

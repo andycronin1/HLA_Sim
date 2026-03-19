@@ -50,6 +50,10 @@ private:
 
     // Helpers
     void updateSoldierAttributes();
+    void handleReceivedInteraction(rti1516e::InteractionClassHandle theInteraction,
+                                   const rti1516e::ParameterHandleValueMap& theParameterValues);
+    bool isHostileTarget(const SoldierState& candidate) const;
+    bool matchesLocalObjectId(const std::string& objectId) const;
 
     void openLogFile();
     void logMessage(const std::string& level, const std::string& message);
@@ -75,6 +79,32 @@ private:
                                 rti1516e::ObjectClassHandle theObjectClass,
                                 const std::wstring& objectName) override;
 
+    void receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                            const rti1516e::ParameterHandleValueMap& theParameterValues,
+                            const rti1516e::VariableLengthData& theUserSuppliedTag,
+                            rti1516e::OrderType sentOrder,
+                            rti1516e::TransportationType theType,
+                            rti1516e::SupplementalReceiveInfo theReceiveInfo) override;
+
+    void receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                            const rti1516e::ParameterHandleValueMap& theParameterValues,
+                            const rti1516e::VariableLengthData& theUserSuppliedTag,
+                            rti1516e::OrderType sentOrder,
+                            rti1516e::TransportationType theType,
+                            const rti1516e::LogicalTime& theTime,
+                            rti1516e::OrderType receivedOrder,
+                            rti1516e::SupplementalReceiveInfo theReceiveInfo) override;
+
+    void receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                            const rti1516e::ParameterHandleValueMap& theParameterValues,
+                            const rti1516e::VariableLengthData& theUserSuppliedTag,
+                            rti1516e::OrderType sentOrder,
+                            rti1516e::TransportationType theType,
+                            const rti1516e::LogicalTime& theTime,
+                            rti1516e::OrderType receivedOrder,
+                            rti1516e::MessageRetractionHandle theHandle,
+                            rti1516e::SupplementalReceiveInfo theReceiveInfo) override;
+
     void reflectAttributeValues(rti1516e::ObjectInstanceHandle theObject,
                                 const rti1516e::AttributeHandleValueMap& theAttributeValues,
                                 const rti1516e::VariableLengthData& theUserSuppliedTag,
@@ -94,6 +124,7 @@ private:
     rti1516e::AttributeHandle spatialHandle_;
     rti1516e::AttributeHandle forceIdentifierHandle_;
     rti1516e::AttributeHandle markingHandle_;
+    rti1516e::AttributeHandle damageStateHandle_;
     rti1516e::ObjectInstanceHandle localSoldierHandle_;
 
     rti1516e::InteractionClassHandle weaponFireClassHandle_;
@@ -141,4 +172,13 @@ private:
     std::chrono::steady_clock::time_point nextShotTime_{};
     bool combatInteractionsEnabled_ = false;
     uint16_t nextEventCount_ = 1;
+    bool hasDamageStateAttribute_ = false;
+    int localHealth_ = 100;
+    bool localAlive_ = true;
+    uint32_t localDamageState_ = 0;
+    std::string localObjectId_;
+    std::string localObjectHandleId_;
+    bool hasLockedTarget_ = false;
+    rti1516e::ObjectInstanceHandle lockedTargetHandle_;
+    std::string lockedTargetName_;
 };

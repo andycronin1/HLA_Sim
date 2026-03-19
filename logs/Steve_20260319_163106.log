@@ -1,0 +1,74 @@
+[2026-03-19 16:31:06] [INFO] [Steve] Log file created at logs\Steve_20260319_163106.log
+[2026-03-19 16:31:06] [INFO] [Steve] Starting federate process.
+[2026-03-19 16:31:06] [INFO] [Steve] Creating RTI ambassador.
+[2026-03-19 16:31:09] [INFO] [Steve] Connected to RTI.
+[2026-03-19 16:31:09] [INFO] [Steve] Using federation MAK-ONE-2025.
+[2026-03-19 16:31:09] [INFO] [Steve] Using FOM module C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml.
+[2026-03-19 16:31:09] [INFO] [Steve] Federation already exists. Joining existing federation.
+[2026-03-19 16:31:09] [INFO] [Steve] Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).
+[2026-03-19 16:31:27] [INFO] [Steve] Joined federation as Steve.
+[2026-03-19 16:31:27] [INFO] [Steve] Using RPR object class: HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human
+[2026-03-19 16:31:27] [INFO] [Steve] DamageState attribute is available and will be published.
+[2026-03-19 16:31:27] [INFO] [Steve] Published/subscribed RPR interactions: HLAinteractionRoot.WeaponFire and HLAinteractionRoot.MunitionDetonation.
+[2026-03-19 16:31:27] [INFO] [Steve] Requested initial Human attribute updates for spawn seeding.
+[2026-03-19 16:31:27] [INFO] [Steve] Requesting object instance name reservation for Steve.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1257 handle=16778088.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1260 handle=16778095.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1261 handle=16778098.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1263 handle=16778103.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1264 handle=16778106.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1265 handle=16778109.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1267 handle=16778114.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1268 handle=16778117.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1269 handle=16778120.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1270 handle=16778123.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1271 handle=16778126.
+[2026-03-19 16:31:27] [INFO] [Steve] Discovered entity=VRF65538:1272 handle=16778129.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:1274 handle=16778134.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:1277 handle=16778139.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:1279 handle=16778144.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:1280 handle=16778147.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:13 handle=16778150.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:130 handle=16778153.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:131 handle=16778156.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:132 handle=16778159.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:134 handle=16778172.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:136 handle=16778177.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:137 handle=16778180.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:138 handle=16778183.
+[2026-03-19 16:31:28] [INFO] [Steve] Discovered entity=VRF65538:139 handle=16778186.
+[2026-03-19 16:31:28] [INFO] [Steve] Object instance name reserved: Steve.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1257 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1260 at x=1338896.112599 y=-4652601.651746 z=4138352.369795.
+[2026-03-19 16:31:28] [INFO] [Steve] Published/subscribed RPR Human attributes.
+[2026-03-19 16:31:28] [INFO] [Steve] Registered local human object instance with reserved name Steve.
+[2026-03-19 16:31:28] [INFO] [Steve] Initialization completed successfully.
+[2026-03-19 16:31:28] [INFO] [Steve] Run started.
+[2026-03-19 16:31:28] [INFO] [Steve] Initialized spawn from remote entity VRF65538:1257 at x=1338895.842043 y=-4652600.711526 z=4138353.506803.
+[2026-03-19 16:31:28] [INFO] [Steve] Entering main loop.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1263 at x=1338891.786135 y=-4652602.889391 z=4138352.363727.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1264 at x=1338962.422545 y=-4652504.780301 z=4138439.247362.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1265 at x=1338893.770704 y=-4652604.361800 z=4138350.095782.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1267 at x=1338894.041260 y=-4652605.302020 z=4138348.958775.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1268 at x=1338912.869540 y=-4652594.793626 z=4138354.643800.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1269 at x=1338972.177195 y=-4652501.212979 z=4138440.096506.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1270 at x=1338897.552154 y=-4652601.230162 z=4138352.363726.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1271 at x=1338893.228615 y=-4652602.477972 z=4138352.366762.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1261 at x=1338869.468680 y=-4652758.687714 z=4138185.537264.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1274 at x=1338901.158111 y=-4652608.337114 z=4138343.267662.
+[2026-03-19 16:31:28] [INFO] [Steve] Received first Spatial for VRF65538:1277 at x=1338894.311817 y=-4652606.242240 z=4138347.821767.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:1279 at x=1338893.500147 y=-4652603.421580 z=4138351.232789.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:1280 at x=1338888.838455 y=-4652746.711170 z=4138192.687925.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:13 at x=1338897.281597 y=-4652600.289943 z=4138353.500734.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:130 at x=1338883.236900 y=-4652752.138067 z=4138188.442810.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:131 at x=1338915.304551 y=-4652603.255605 z=4138344.410734.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:132 at x=1338967.215832 y=-4652503.210878 z=4138439.459676.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:134 at x=1338894.671095 y=-4652602.066553 z=4138352.369796.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:137 at x=1338916.746055 y=-4652602.840799 z=4138344.410733.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:138 at x=1338909.984581 y=-4652595.616462 z=4138354.637734.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:139 at x=1338911.428036 y=-4652595.208433 z=4138354.643802.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:1272 at x=1338913.861095 y=-4652603.663631 z=4138344.404664.
+[2026-03-19 16:31:29] [INFO] [Steve] Received first Spatial for VRF65538:136 at x=1338896.835548 y=-4652609.588315 z=4138343.273735.
+[2026-03-19 16:32:36] [INFO] [Steve] Local entity hit by VRF65538:1269; damage=60 health=40 damageState=2.
+[2026-03-19 16:33:23] [INFO] [Steve] Local entity hit by VRF65538:1264; damage=60 health=0 damageState=3 (destroyed).
+[2026-03-19 16:33:23] [WARN] [Steve] Local entity destroyed. Movement and firing are now disabled.

@@ -43,13 +43,20 @@ namespace
 constexpr uint8_t kDeadReckoningStatic = 1;
 constexpr uint8_t kForceFriendly = 1;
 constexpr uint8_t kMarkingAscii = 1;
-constexpr double kEngagementRangeMeters = 5.0;
+constexpr double kEngagementRangeMeters = 25.0;
 constexpr double kEngagementRangeMetersSquared = kEngagementRangeMeters * kEngagementRangeMeters;
 constexpr std::chrono::milliseconds kShotCooldown(1000);
 constexpr float kProjectileSpeedMetersPerSecond = 800.0f;
 constexpr uint16_t kFuseTypeContact = 1000;
 constexpr uint16_t kWarheadTypeHighExplosive = 1000;
 constexpr uint8_t kDetonationResultEntityImpact = 1;
+constexpr uint32_t kDamageStateNoDamage = 0;
+constexpr uint32_t kDamageStateSlight = 1;
+constexpr uint32_t kDamageStateModerate = 2;
+constexpr uint32_t kDamageStateDestroyed = 3;
+constexpr double kDetonationProximityDamageRadiusMeters = 8.0;
+constexpr double kDetonationProximityDamageRadiusSquared =
+    kDetonationProximityDamageRadiusMeters * kDetonationProximityDamageRadiusMeters;
 
 struct EntityTypeData
 {
@@ -119,6 +126,14 @@ std::string trimRight(const std::string& value)
     }
 
     return value.substr(0, end);
+}
+
+std::string toLowerAscii(std::string value)
+{
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
 }
 
 std::tm localTimeNow()
@@ -452,6 +467,13 @@ VariableLengthData encodeDetonationResultCode(uint8_t resultCode)
     return encoded.encode();
 }
 
+uint8_t decodeDetonationResultCode(const VariableLengthData& data)
+{
+    HLAoctet encoded;
+    encoded.decode(data);
+    return static_cast<uint8_t>(encoded.get());
+}
+
 VariableLengthData encodeRtiObjectId(const std::string& objectId)
 {
     std::vector<char> encoded;
@@ -459,6 +481,70 @@ VariableLengthData encodeRtiObjectId(const std::string& objectId)
     encoded.insert(encoded.end(), objectId.begin(), objectId.end());
     encoded.push_back('\0');
     return VariableLengthData(encoded.data(), encoded.size());
+}
+
+std::string decodeRtiObjectId(const VariableLengthData& data)
+{
+    const char* bytes = static_cast<const char*>(data.data());
+    if (bytes == nullptr || data.size() == 0)
+    {
+        return std::string();
+    }
+
+    size_t length = 0;
+    while (length < data.size() && bytes[length] != '\0')
+    {
+        ++length;
+    }
+
+    return std::string(bytes, bytes + length);
+}
+
+int computeDamageFromDetonationResult(uint8_t detonationResultCode)
+{
+    switch (detonationResultCode)
+    {
+    case 0: // Other
+        return 20;
+    case 1: // EntityImpact
+        return 60;
+    case 2: // EntityProximateDetonation
+        return 35;
+    case 6: // None
+        return 0;
+    case 7: // HE_hit_Small
+        return 45;
+    case 8: // HE_hit_Medium
+        return 60;
+    case 9: // HE_hit_Large
+        return 80;
+    case 10: // ArmorPiercingHit
+        return 90;
+    case 26: // Kill_with_fragment_type_1
+        return 100;
+    default:
+        return 25;
+    }
+}
+
+uint32_t computeDamageStateFromHealth(int health)
+{
+    if (health <= 0)
+    {
+        return kDamageStateDestroyed;
+    }
+
+    if (health <= 40)
+    {
+        return kDamageStateModerate;
+    }
+
+    if (health <= 75)
+    {
+        return kDamageStateSlight;
+    }
+
+    return kDamageStateNoDamage;
 }
 
 VariableLengthData encodeEventIdentifier(uint16_t eventCount, const std::string& issuingObjectId)
@@ -475,6 +561,23 @@ VariableLengthData encodeEventIdentifier(uint16_t eventCount, const std::string&
 VariableLengthData encodeWorldLocation(double x, double y, double z)
 {
     return makeWorldLocationRecord(x, y, z).encode();
+}
+
+bool decodeWorldLocation(const VariableLengthData& data, double& x, double& y, double& z)
+{
+    try
+    {
+        HLAfixedRecord worldLocation = makeWorldLocationPrototype();
+        worldLocation.decode(data);
+        x = static_cast<const HLAfloat64BE&>(worldLocation.get(0)).get();
+        y = static_cast<const HLAfloat64BE&>(worldLocation.get(1)).get();
+        z = static_cast<const HLAfloat64BE&>(worldLocation.get(2)).get();
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
 }
 
 VariableLengthData encodeVelocityVector(float x, float y, float z)
@@ -927,12 +1030,28 @@ void SoldierFederate::publishAndSubscribe()
     forceIdentifierHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"ForceIdentifier");
     markingHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"Marking");
 
+    hasDamageStateAttribute_ = false;
+    try
+    {
+        damageStateHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"DamageState");
+        hasDamageStateAttribute_ = true;
+        logMessage("INFO", "DamageState attribute is available and will be published.");
+    }
+    catch (const NameNotFound&)
+    {
+        logMessage("WARN", "DamageState attribute not found for this class; damage visualization updates are limited.");
+    }
+
     AttributeHandleSet attributes;
     attributes.insert(entityTypeHandle_);
     attributes.insert(entityIdentifierHandle_);
     attributes.insert(spatialHandle_);
     attributes.insert(forceIdentifierHandle_);
     attributes.insert(markingHandle_);
+    if (hasDamageStateAttribute_)
+    {
+        attributes.insert(damageStateHandle_);
+    }
 
     rtiAmb_->publishObjectClassAttributes(humanClassHandle_, attributes);
     rtiAmb_->subscribeObjectClassAttributes(humanClassHandle_, attributes);
@@ -1013,9 +1132,11 @@ void SoldierFederate::publishAndSubscribe()
 
             rtiAmb_->publishInteractionClass(weaponFireClassHandle_);
             rtiAmb_->publishInteractionClass(munitionDetonationClassHandle_);
+            rtiAmb_->subscribeInteractionClass(weaponFireClassHandle_);
+            rtiAmb_->subscribeInteractionClass(munitionDetonationClassHandle_);
             combatInteractionsEnabled_ = true;
 
-            logMessage("INFO", "Published RPR interactions: " + toNarrow(weaponFireClassName) + " and " + toNarrow(munitionDetonationClassName) + ".");
+            logMessage("INFO", "Published/subscribed RPR interactions: " + toNarrow(weaponFireClassName) + " and " + toNarrow(munitionDetonationClassName) + ".");
         }
         catch (const Exception& ex)
         {
@@ -1048,6 +1169,8 @@ void SoldierFederate::publishAndSubscribe()
     const std::wstring objectInstanceName = toWide(federateName_);
     reserveLocalObjectInstanceName(objectInstanceName);
     localSoldierHandle_ = rtiAmb_->registerObjectInstance(humanClassHandle_, objectInstanceName);
+    localObjectHandleId_ = toNarrow(localSoldierHandle_.toString());
+    localObjectId_ = localSoldier_.objectName.empty() ? localObjectHandleId_ : localSoldier_.objectName;
 
     std::wcout << L"Registered local human lifeform object instance.\n";
     logMessage("INFO", "Published/subscribed RPR Human attributes.");
@@ -1068,8 +1191,189 @@ void SoldierFederate::updateSoldierAttributes()
     updates[spatialHandle_] = encodeSpatialStatic(spatial);
     updates[forceIdentifierHandle_] = encodeForceIdentifier(localSoldier_.forceIdentifier);
     updates[markingHandle_] = encodeMarking(localSoldier_.marking);
+    if (hasDamageStateAttribute_)
+    {
+        updates[damageStateHandle_] = encodeUnsignedInteger32(localDamageState_);
+    }
 
     rtiAmb_->updateAttributeValues(localSoldierHandle_, updates, VariableLengthData());
+}
+
+bool SoldierFederate::isHostileTarget(const SoldierState& candidate) const
+{
+    if (candidate.forceIdentifier == 0 || localSoldier_.forceIdentifier == 0)
+    {
+        return true;
+    }
+
+    return candidate.forceIdentifier != localSoldier_.forceIdentifier;
+}
+
+bool SoldierFederate::matchesLocalObjectId(const std::string& objectId) const
+{
+    if (objectId.empty())
+    {
+        return false;
+    }
+
+    if (objectId == localObjectId_ ||
+        objectId == localObjectHandleId_ ||
+        objectId == localSoldier_.objectName ||
+        objectId == federateName_)
+    {
+        return true;
+    }
+
+    const std::string lowered = toLowerAscii(objectId);
+    const std::string loweredName = toLowerAscii(localSoldier_.objectName);
+    const std::string loweredFederateName = toLowerAscii(federateName_);
+    const std::string loweredHandleId = toLowerAscii(localObjectHandleId_);
+
+    if (!loweredName.empty() && lowered == loweredName)
+    {
+        return true;
+    }
+
+    if (!loweredFederateName.empty() && lowered == loweredFederateName)
+    {
+        return true;
+    }
+
+    if (!loweredHandleId.empty() && lowered == loweredHandleId)
+    {
+        return true;
+    }
+
+    // Some simulators include the ID in a longer token; accept containment as a fallback.
+    if (!localObjectHandleId_.empty() && objectId.find(localObjectHandleId_) != std::string::npos)
+    {
+        return true;
+    }
+
+    if (!localSoldier_.objectName.empty() && objectId.find(localSoldier_.objectName) != std::string::npos)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void SoldierFederate::handleReceivedInteraction(rti1516e::InteractionClassHandle theInteraction,
+                                                const rti1516e::ParameterHandleValueMap& theParameterValues)
+{
+    if (theInteraction != munitionDetonationClassHandle_)
+    {
+        return;
+    }
+
+    if (localObjectId_.empty())
+    {
+        return;
+    }
+
+    std::string firingObjectId = "unknown";
+    const auto firingIt = theParameterValues.find(munitionDetonationFiringObjectIdentifierHandle_);
+    if (firingIt != theParameterValues.end())
+    {
+        firingObjectId = decodeRtiObjectId(firingIt->second);
+        if (firingObjectId.empty())
+        {
+            firingObjectId = "unknown";
+        }
+    }
+
+    // Ignore our own detonation interactions if the RTI reflects them back.
+    if (firingObjectId != "unknown" && matchesLocalObjectId(firingObjectId))
+    {
+        return;
+    }
+
+    bool targetedLocal = false;
+    std::string targetObjectId;
+
+    const auto targetIt = theParameterValues.find(munitionDetonationTargetObjectIdentifierHandle_);
+    if (targetIt != theParameterValues.end())
+    {
+        targetObjectId = decodeRtiObjectId(targetIt->second);
+        targetedLocal = matchesLocalObjectId(targetObjectId);
+    }
+
+    if (!targetedLocal)
+    {
+        // Fallback: treat nearby detonations as hits when target object IDs are omitted or encoded differently.
+        const auto detonationLocationIt = theParameterValues.find(munitionDetonationDetonationLocationHandle_);
+        if (detonationLocationIt != theParameterValues.end())
+        {
+            double detonationX = 0.0;
+            double detonationY = 0.0;
+            double detonationZ = 0.0;
+
+            if (decodeWorldLocation(detonationLocationIt->second, detonationX, detonationY, detonationZ))
+            {
+                const double dx = detonationX - localSoldier_.x;
+                const double dy = detonationY - localSoldier_.y;
+                const double dz = detonationZ - localSoldier_.z;
+                const double detonationDistanceSquared = dx * dx + dy * dy + dz * dz;
+                targetedLocal = (detonationDistanceSquared <= kDetonationProximityDamageRadiusSquared);
+            }
+        }
+    }
+
+    if (!targetedLocal)
+    {
+        return;
+    }
+
+    uint8_t detonationResultCode = 0;
+    const auto resultIt = theParameterValues.find(munitionDetonationDetonationResultCodeHandle_);
+    if (resultIt != theParameterValues.end())
+    {
+        detonationResultCode = decodeDetonationResultCode(resultIt->second);
+    }
+
+    if (!localAlive_)
+    {
+        logMessage("INFO", "Received detonation targeting local entity from " + firingObjectId + " while already destroyed.");
+        return;
+    }
+
+    const int damage = computeDamageFromDetonationResult(detonationResultCode);
+    if (damage <= 0)
+    {
+        logMessage("INFO", "Received non-damaging detonation for local entity from " + firingObjectId + ".");
+        return;
+    }
+
+    localHealth_ = std::max(0, localHealth_ - damage);
+    localDamageState_ = computeDamageStateFromHealth(localHealth_);
+
+    if (localHealth_ <= 0)
+    {
+        localAlive_ = false;
+        localSoldier_.marking = "KIA";
+    }
+
+    try
+    {
+        updateSoldierAttributes();
+    }
+    catch (const Exception& ex)
+    {
+        logMessage("WARN", "Failed to publish post-damage state update: " + toNarrow(ex.what()));
+    }
+
+    logMessage(
+        "INFO",
+        "Local entity hit by " + firingObjectId +
+        "; damage=" + std::to_string(damage) +
+        " health=" + std::to_string(localHealth_) +
+        " damageState=" + std::to_string(localDamageState_) +
+        (localAlive_ ? "." : " (destroyed)."));
+
+    if (!localAlive_)
+    {
+        logMessage("WARN", "Local entity destroyed. Movement and firing are now disabled.");
+    }
 }
 
 bool SoldierFederate::tryGetRemoteSpawnReference(SoldierState& remoteState) const
@@ -1155,8 +1459,9 @@ void SoldierFederate::sendWeaponFireAndDetonation(rti1516e::ObjectInstanceHandle
         return;
     }
 
-    const std::string firingObjectId = toNarrow(localSoldierHandle_.toString());
-    const std::string targetObjectId = toNarrow(targetHandle.toString());
+    const std::string firingObjectId = localObjectId_.empty() ? localObjectHandleId_ : localObjectId_;
+    const std::string targetObjectId = targetState.objectName.empty() ? toNarrow(targetHandle.toString())
+                                                                       : targetState.objectName;
     const uint16_t eventCount = nextEventCount_;
 
     ++nextEventCount_;
@@ -1216,6 +1521,11 @@ void SoldierFederate::sendWeaponFireAndDetonation(rti1516e::ObjectInstanceHandle
 
 void SoldierFederate::engageNearbyTargets()
 {
+    if (!localAlive_)
+    {
+        return;
+    }
+
     const auto now = std::chrono::steady_clock::now();
     if (now < nextShotTime_)
     {
@@ -1229,32 +1539,86 @@ void SoldierFederate::engageNearbyTargets()
     double selectedDy = 0.0;
     double selectedDz = 0.0;
 
-    for (const auto& kv : knownSoldiers_)
+    if (hasLockedTarget_)
     {
-        if (kv.first == localSoldierHandle_)
+        const auto lockedIt = knownSoldiers_.find(lockedTargetHandle_);
+        if (lockedIt != knownSoldiers_.end() && lockedIt->second.hasSpatial && isHostileTarget(lockedIt->second))
         {
-            continue;
+            const SoldierState& candidate = lockedIt->second;
+            const double dx = candidate.x - localSoldier_.x;
+            const double dy = candidate.y - localSoldier_.y;
+            const double dz = candidate.z - localSoldier_.z;
+            const double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+            if (distanceSquared <= kEngagementRangeMetersSquared)
+            {
+                selectedTarget = &candidate;
+                selectedTargetHandle = &lockedIt->first;
+                selectedDistanceSquared = distanceSquared;
+                selectedDx = dx;
+                selectedDy = dy;
+                selectedDz = dz;
+            }
+            else
+            {
+                hasLockedTarget_ = false;
+                logMessage("INFO", "Target lock released for " + lockedTargetName_ + " (out of engagement range).");
+                lockedTargetName_.clear();
+            }
+        }
+        else
+        {
+            hasLockedTarget_ = false;
+            if (!lockedTargetName_.empty())
+            {
+                logMessage("INFO", "Target lock released for " + lockedTargetName_ + " (target unavailable).");
+            }
+            lockedTargetName_.clear();
+        }
+    }
+
+    if (selectedTarget == nullptr)
+    {
+        for (const auto& kv : knownSoldiers_)
+        {
+            if (kv.first == localSoldierHandle_)
+            {
+                continue;
+            }
+
+            const SoldierState& candidate = kv.second;
+            if (!candidate.hasSpatial)
+            {
+                continue;
+            }
+
+            if (!isHostileTarget(candidate))
+            {
+                continue;
+            }
+
+            const double dx = candidate.x - localSoldier_.x;
+            const double dy = candidate.y - localSoldier_.y;
+            const double dz = candidate.z - localSoldier_.z;
+            const double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+            if (distanceSquared <= selectedDistanceSquared)
+            {
+                selectedTarget = &candidate;
+                selectedTargetHandle = &kv.first;
+                selectedDistanceSquared = distanceSquared;
+                selectedDx = dx;
+                selectedDy = dy;
+                selectedDz = dz;
+            }
         }
 
-        const SoldierState& candidate = kv.second;
-        if (!candidate.hasSpatial)
+        if (selectedTarget != nullptr && selectedTargetHandle != nullptr)
         {
-            continue;
-        }
-
-        const double dx = candidate.x - localSoldier_.x;
-        const double dy = candidate.y - localSoldier_.y;
-        const double dz = candidate.z - localSoldier_.z;
-        const double distanceSquared = dx * dx + dy * dy + dz * dz;
-
-        if (distanceSquared <= selectedDistanceSquared)
-        {
-            selectedTarget = &candidate;
-            selectedTargetHandle = &kv.first;
-            selectedDistanceSquared = distanceSquared;
-            selectedDx = dx;
-            selectedDy = dy;
-            selectedDz = dz;
+            hasLockedTarget_ = true;
+            lockedTargetHandle_ = *selectedTargetHandle;
+            lockedTargetName_ = selectedTarget->objectName;
+            logMessage("INFO", "Target lock acquired on " + lockedTargetName_ + ".");
         }
     }
 
@@ -1308,18 +1672,22 @@ void SoldierFederate::mainLoop()
     {
         while (!connectionLost_)
         {
-            const double dx = step(rng) * 0.5;
-            const double dy = step(rng) * 0.5;
-
-            localSoldier_.x += dx;
-            localSoldier_.y += dy;
-
-            if (std::fabs(dx) > 0.0001 || std::fabs(dy) > 0.0001)
+            if (localAlive_)
             {
-                localSoldier_.psi = static_cast<float>(std::atan2(dy, dx));
+                const double dx = step(rng) * 0.5;
+                const double dy = step(rng) * 0.5;
+
+                localSoldier_.x += dx;
+                localSoldier_.y += dy;
+
+                if (std::fabs(dx) > 0.0001 || std::fabs(dy) > 0.0001)
+                {
+                    localSoldier_.psi = static_cast<float>(std::atan2(dy, dx));
+                }
+
+                engageNearbyTargets();
             }
 
-            engageNearbyTargets();
             updateSoldierAttributes();
 
             rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
@@ -1408,6 +1776,58 @@ void SoldierFederate::discoverObjectInstance(rti1516e::ObjectInstanceHandle theO
 
     std::wcout << L"Discovered entity: " << objectName << L" (handle=" << theObject.toString() << L")\n";
     logMessage("INFO", "Discovered entity=" + state.objectName + " handle=" + toNarrow(theObject.toString()) + ".");
+}
+
+void SoldierFederate::receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                                        const rti1516e::ParameterHandleValueMap& theParameterValues,
+                                        const rti1516e::VariableLengthData& theUserSuppliedTag,
+                                        rti1516e::OrderType sentOrder,
+                                        rti1516e::TransportationType theType,
+                                        rti1516e::SupplementalReceiveInfo theReceiveInfo)
+{
+    (void)theUserSuppliedTag;
+    (void)sentOrder;
+    (void)theType;
+    (void)theReceiveInfo;
+    handleReceivedInteraction(theInteraction, theParameterValues);
+}
+
+void SoldierFederate::receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                                        const rti1516e::ParameterHandleValueMap& theParameterValues,
+                                        const rti1516e::VariableLengthData& theUserSuppliedTag,
+                                        rti1516e::OrderType sentOrder,
+                                        rti1516e::TransportationType theType,
+                                        const rti1516e::LogicalTime& theTime,
+                                        rti1516e::OrderType receivedOrder,
+                                        rti1516e::SupplementalReceiveInfo theReceiveInfo)
+{
+    (void)theUserSuppliedTag;
+    (void)sentOrder;
+    (void)theType;
+    (void)theTime;
+    (void)receivedOrder;
+    (void)theReceiveInfo;
+    handleReceivedInteraction(theInteraction, theParameterValues);
+}
+
+void SoldierFederate::receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
+                                        const rti1516e::ParameterHandleValueMap& theParameterValues,
+                                        const rti1516e::VariableLengthData& theUserSuppliedTag,
+                                        rti1516e::OrderType sentOrder,
+                                        rti1516e::TransportationType theType,
+                                        const rti1516e::LogicalTime& theTime,
+                                        rti1516e::OrderType receivedOrder,
+                                        rti1516e::MessageRetractionHandle theHandle,
+                                        rti1516e::SupplementalReceiveInfo theReceiveInfo)
+{
+    (void)theUserSuppliedTag;
+    (void)sentOrder;
+    (void)theType;
+    (void)theTime;
+    (void)receivedOrder;
+    (void)theHandle;
+    (void)theReceiveInfo;
+    handleReceivedInteraction(theInteraction, theParameterValues);
 }
 
 void SoldierFederate::reflectAttributeValues(rti1516e::ObjectInstanceHandle theObject,

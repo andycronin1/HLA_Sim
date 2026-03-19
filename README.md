@@ -23,6 +23,10 @@ For close-range engagements, the federate also publishes these RPR interactions:
 - `HLAinteractionRoot.WeaponFire`
 - `HLAinteractionRoot.MunitionDetonation`
 
+It also subscribes to incoming `HLAinteractionRoot.MunitionDetonation` interactions,
+applies local health/damage, and publishes `DamageState` (when available in the joined
+RPR class) so destroyed state can be visualized by peers.
+
 ## RPR FOM In This Repo
 
 The VR-Forces RPR module has been copied into this repository at:
