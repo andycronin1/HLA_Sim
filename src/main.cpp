@@ -57,6 +57,15 @@ int main(int argc, char* argv[])
         SoldierFederate federate(name);
         federate.run();
     }
+    catch (const rti1516e::Exception& ex)
+    {
+        std::wcerr << L"RTI Exception: " << ex.what() << L"\n";
+
+        const std::wstring wideMessage(ex.what());
+        const std::string narrowMessage(wideMessage.begin(), wideMessage.end());
+        appendFatalLog(std::string("Unhandled RTI exception in main: ") + narrowMessage);
+        return 1;
+    }
     catch (const std::exception& ex)
     {
         std::cerr << "Exception: " << ex.what() << "\n";

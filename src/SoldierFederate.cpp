@@ -1,16 +1,26 @@
 #include "SoldierFederate.h"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <random>
 #include <sstream>
+#include <stdexcept>
 #include <thread>
+
+#include <RTI/encoding/BasicDataElements.h>
+#include <RTI/encoding/HLAfixedArray.h>
+#include <RTI/encoding/HLAfixedRecord.h>
+#include <RTI/encoding/HLAvariantRecord.h>
 
 namespace std {
 template<class T>
@@ -30,6 +40,44 @@ using namespace rti1516e;
 
 namespace
 {
+constexpr uint8_t kDeadReckoningStatic = 1;
+constexpr uint8_t kForceFriendly = 1;
+constexpr uint8_t kMarkingAscii = 1;
+
+struct EntityTypeData
+{
+    uint8_t entityKind = 3;   // Lifeform
+    uint8_t domain = 1;       // Land
+    uint16_t countryCode = 225;
+    uint8_t category = 1;
+    uint8_t subcategory = 0;
+    uint8_t specific = 0;
+    uint8_t extra = 0;
+};
+
+struct EntityIdentifierData
+{
+    uint16_t siteId = 1;
+    uint16_t applicationId = 1;
+    uint16_t entityNumber = 1;
+};
+
+struct SpatialData
+{
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    float psi = 0.0f;
+    float theta = 0.0f;
+    float phi = 0.0f;
+    bool isFrozen = false;
+};
+
+std::wstring toWide(const std::string& text)
+{
+    return std::wstring(text.begin(), text.end());
+}
+
 std::string toNarrow(const std::wstring& text)
 {
     return std::string(text.begin(), text.end());
@@ -42,8 +90,18 @@ std::string toNarrow(const wchar_t* text)
         return std::string();
     }
 
-    std::wstring wide(text);
-    return std::string(wide.begin(), wide.end());
+    return toNarrow(std::wstring(text));
+}
+
+std::string trimRight(const std::string& value)
+{
+    size_t end = value.size();
+    while (end > 0 && (value[end - 1] == '\0' || value[end - 1] == ' '))
+    {
+        --end;
+    }
+
+    return value.substr(0, end);
 }
 
 std::tm localTimeNow()
@@ -73,55 +131,383 @@ std::string timestampForLogLine()
     out << std::put_time(&tmValue, "%Y-%m-%d %H:%M:%S");
     return out.str();
 }
-}
 
-static std::vector<uint8_t> encodeDouble(double value)
+uint16_t parseEnvUInt16(const char* variableName, uint16_t defaultValue)
 {
-    std::vector<uint8_t> data(sizeof(double));
-    std::memcpy(data.data(), &value, sizeof(double));
-    return data;
-}
-
-static double decodeDouble(const VariableLengthData& data)
-{
-    double value = 0.0;
-    if (data.size() >= sizeof(double))
+    const char* rawValue = std::getenv(variableName);
+    if (rawValue == nullptr || rawValue[0] == '\0')
     {
-        std::memcpy(&value, data.data(), sizeof(double));
+        return defaultValue;
     }
+
+    try
+    {
+        const long parsed = std::stol(rawValue);
+        if (parsed < 0 || parsed > 65535)
+        {
+            return defaultValue;
+        }
+
+        return static_cast<uint16_t>(parsed);
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
+}
+
+uint8_t parseEnvUInt8(const char* variableName, uint8_t defaultValue)
+{
+    const char* rawValue = std::getenv(variableName);
+    if (rawValue == nullptr || rawValue[0] == '\0')
+    {
+        return defaultValue;
+    }
+
+    try
+    {
+        const long parsed = std::stol(rawValue);
+        if (parsed < 0 || parsed > 255)
+        {
+            return defaultValue;
+        }
+
+        return static_cast<uint8_t>(parsed);
+    }
+    catch (...)
+    {
+        return defaultValue;
+    }
+}
+
+bool parseEnvBool(const char* variableName, bool defaultValue)
+{
+    const char* rawValue = std::getenv(variableName);
+    if (rawValue == nullptr || rawValue[0] == '\0')
+    {
+        return defaultValue;
+    }
+
+    std::string value(rawValue);
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+
+    if (value == "1" || value == "true" || value == "yes" || value == "on")
+    {
+        return true;
+    }
+
+    if (value == "0" || value == "false" || value == "no" || value == "off")
+    {
+        return false;
+    }
+
+    return defaultValue;
+}
+
+uint16_t deriveEntityNumber(const std::string& federateName)
+{
+    const size_t hashed = std::hash<std::string>{}(federateName);
+    return static_cast<uint16_t>(1 + (hashed % 65534));
+}
+
+HLAfixedRecord makeWorldLocationRecord(double x, double y, double z)
+{
+    HLAfixedRecord record;
+    record.appendElement(HLAfloat64BE(x));
+    record.appendElement(HLAfloat64BE(y));
+    record.appendElement(HLAfloat64BE(z));
+    return record;
+}
+
+HLAfixedRecord makeWorldLocationPrototype()
+{
+    return makeWorldLocationRecord(0.0, 0.0, 0.0);
+}
+
+HLAfixedRecord makeOrientationRecord(float psi, float theta, float phi)
+{
+    HLAfixedRecord record;
+    record.appendElement(HLAfloat32BE(psi));
+    record.appendElement(HLAfloat32BE(theta));
+    record.appendElement(HLAfloat32BE(phi));
+    return record;
+}
+
+HLAfixedRecord makeOrientationPrototype()
+{
+    return makeOrientationRecord(0.0f, 0.0f, 0.0f);
+}
+
+HLAfixedRecord makeVector3FloatRecord(float x, float y, float z)
+{
+    HLAfixedRecord record;
+    record.appendElement(HLAfloat32BE(x));
+    record.appendElement(HLAfloat32BE(y));
+    record.appendElement(HLAfloat32BE(z));
+    return record;
+}
+
+HLAfixedRecord makeVector3FloatPrototype()
+{
+    return makeVector3FloatRecord(0.0f, 0.0f, 0.0f);
+}
+
+HLAfixedRecord makeSpatialStaticRecord(const SpatialData& spatial)
+{
+    HLAfixedRecord spatialStatic;
+    spatialStatic.appendElement(makeWorldLocationRecord(spatial.x, spatial.y, spatial.z));
+    spatialStatic.appendElement(HLAoctet(spatial.isFrozen ? 1 : 0));
+    spatialStatic.appendElement(makeOrientationRecord(spatial.psi, spatial.theta, spatial.phi));
+    return spatialStatic;
+}
+
+HLAfixedRecord makeSpatialStaticRecordPrototype()
+{
+    return makeSpatialStaticRecord(SpatialData{});
+}
+
+HLAfixedRecord makeSpatialFPRecordPrototype()
+{
+    HLAfixedRecord spatialFP;
+    spatialFP.appendElement(makeWorldLocationPrototype());
+    spatialFP.appendElement(HLAoctet(static_cast<Octet>(0)));
+    spatialFP.appendElement(makeOrientationPrototype());
+    spatialFP.appendElement(makeVector3FloatPrototype());
+    return spatialFP;
+}
+
+HLAfixedRecord makeSpatialRPRecordPrototype()
+{
+    HLAfixedRecord spatialRP;
+    spatialRP.appendElement(makeWorldLocationPrototype());
+    spatialRP.appendElement(HLAoctet(static_cast<Octet>(0)));
+    spatialRP.appendElement(makeOrientationPrototype());
+    spatialRP.appendElement(makeVector3FloatPrototype());
+    spatialRP.appendElement(makeVector3FloatPrototype());
+    return spatialRP;
+}
+
+HLAfixedRecord makeSpatialRVRecordPrototype()
+{
+    HLAfixedRecord spatialRV;
+    spatialRV.appendElement(makeWorldLocationPrototype());
+    spatialRV.appendElement(HLAoctet(static_cast<Octet>(0)));
+    spatialRV.appendElement(makeOrientationPrototype());
+    spatialRV.appendElement(makeVector3FloatPrototype());
+    spatialRV.appendElement(makeVector3FloatPrototype());
+    spatialRV.appendElement(makeVector3FloatPrototype());
+    return spatialRV;
+}
+
+HLAfixedRecord makeSpatialFVRecordPrototype()
+{
+    HLAfixedRecord spatialFV;
+    spatialFV.appendElement(makeWorldLocationPrototype());
+    spatialFV.appendElement(HLAoctet(static_cast<Octet>(0)));
+    spatialFV.appendElement(makeOrientationPrototype());
+    spatialFV.appendElement(makeVector3FloatPrototype());
+    spatialFV.appendElement(makeVector3FloatPrototype());
+    return spatialFV;
+}
+
+HLAvariantRecord makeSpatialVariantPrototype()
+{
+    const HLAoctet discriminantPrototype(static_cast<Octet>(0));
+    HLAvariantRecord spatialVariant(discriminantPrototype);
+
+    const HLAfixedRecord spatialStatic = makeSpatialStaticRecordPrototype();
+    const HLAfixedRecord spatialFP = makeSpatialFPRecordPrototype();
+    const HLAfixedRecord spatialRP = makeSpatialRPRecordPrototype();
+    const HLAfixedRecord spatialRV = makeSpatialRVRecordPrototype();
+    const HLAfixedRecord spatialFV = makeSpatialFVRecordPrototype();
+
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(1)), spatialStatic);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(2)), spatialFP);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(3)), spatialRP);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(4)), spatialRV);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(5)), spatialFV);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(6)), spatialFP);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(7)), spatialRP);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(8)), spatialRV);
+    spatialVariant.addVariant(HLAoctet(static_cast<Octet>(9)), spatialFV);
+
+    return spatialVariant;
+}
+
+VariableLengthData encodeEntityType(const EntityTypeData& value)
+{
+    HLAfixedRecord record;
+    record.appendElement(HLAoctet(value.entityKind));
+    record.appendElement(HLAoctet(value.domain));
+    record.appendElement(HLAinteger16BE(static_cast<Integer16>(value.countryCode)));
+    record.appendElement(HLAoctet(value.category));
+    record.appendElement(HLAoctet(value.subcategory));
+    record.appendElement(HLAoctet(value.specific));
+    record.appendElement(HLAoctet(value.extra));
+    return record.encode();
+}
+
+EntityTypeData decodeEntityType(const VariableLengthData& data)
+{
+    HLAfixedRecord record;
+    record.appendElement(HLAoctet());
+    record.appendElement(HLAoctet());
+    record.appendElement(HLAinteger16BE());
+    record.appendElement(HLAoctet());
+    record.appendElement(HLAoctet());
+    record.appendElement(HLAoctet());
+    record.appendElement(HLAoctet());
+    record.decode(data);
+
+    EntityTypeData value;
+    value.entityKind = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(0)).get());
+    value.domain = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(1)).get());
+    value.countryCode = static_cast<uint16_t>(static_cast<const HLAinteger16BE&>(record.get(2)).get());
+    value.category = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(3)).get());
+    value.subcategory = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(4)).get());
+    value.specific = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(5)).get());
+    value.extra = static_cast<uint8_t>(static_cast<const HLAoctet&>(record.get(6)).get());
     return value;
 }
 
-static std::vector<uint8_t> encodeInt32(int32_t value)
+VariableLengthData encodeEntityIdentifier(const EntityIdentifierData& value)
 {
-    std::vector<uint8_t> data(sizeof(int32_t));
-    std::memcpy(data.data(), &value, sizeof(int32_t));
-    return data;
+    HLAfixedRecord federateIdentifier;
+    federateIdentifier.appendElement(HLAinteger16BE(static_cast<Integer16>(value.siteId)));
+    federateIdentifier.appendElement(HLAinteger16BE(static_cast<Integer16>(value.applicationId)));
+
+    HLAfixedRecord entityIdentifier;
+    entityIdentifier.appendElement(federateIdentifier);
+    entityIdentifier.appendElement(HLAinteger16BE(static_cast<Integer16>(value.entityNumber)));
+
+    return entityIdentifier.encode();
 }
 
-static int32_t decodeInt32(const VariableLengthData& data)
+EntityIdentifierData decodeEntityIdentifier(const VariableLengthData& data)
 {
-    int32_t value = 0;
-    if (data.size() >= sizeof(int32_t))
-    {
-        std::memcpy(&value, data.data(), sizeof(int32_t));
-    }
+    HLAfixedRecord federateIdentifier;
+    federateIdentifier.appendElement(HLAinteger16BE());
+    federateIdentifier.appendElement(HLAinteger16BE());
+
+    HLAfixedRecord entityIdentifier;
+    entityIdentifier.appendElement(federateIdentifier);
+    entityIdentifier.appendElement(HLAinteger16BE());
+    entityIdentifier.decode(data);
+
+    const HLAfixedRecord& federateIdValue = static_cast<const HLAfixedRecord&>(entityIdentifier.get(0));
+
+    EntityIdentifierData value;
+    value.siteId = static_cast<uint16_t>(static_cast<const HLAinteger16BE&>(federateIdValue.get(0)).get());
+    value.applicationId = static_cast<uint16_t>(static_cast<const HLAinteger16BE&>(federateIdValue.get(1)).get());
+    value.entityNumber = static_cast<uint16_t>(static_cast<const HLAinteger16BE&>(entityIdentifier.get(1)).get());
     return value;
 }
 
-static std::vector<uint8_t> encodeString(const std::string& str)
+VariableLengthData encodeForceIdentifier(uint8_t forceIdentifier)
 {
-    return std::vector<uint8_t>(str.begin(), str.end());
+    HLAoctet encoded(forceIdentifier);
+    return encoded.encode();
 }
 
-static std::string decodeString(const VariableLengthData& data)
+uint8_t decodeForceIdentifier(const VariableLengthData& data)
 {
-    return std::string(reinterpret_cast<const char*>(data.data()), data.size());
+    HLAoctet encoded;
+    encoded.decode(data);
+    return static_cast<uint8_t>(encoded.get());
 }
+
+VariableLengthData encodeMarking(const std::string& marking)
+{
+    std::string normalized = marking;
+    if (normalized.size() > 11)
+    {
+        normalized.resize(11);
+    }
+
+    HLAfixedArray markingData(HLAoctet(), 11);
+    for (size_t i = 0; i < 11; ++i)
+    {
+        const Octet value = (i < normalized.size()) ? static_cast<Octet>(normalized[i]) : 0;
+        markingData.set(i, HLAoctet(value));
+    }
+
+    HLAfixedRecord markingRecord;
+    markingRecord.appendElement(HLAoctet(kMarkingAscii));
+    markingRecord.appendElement(markingData);
+    return markingRecord.encode();
+}
+
+std::string decodeMarking(const VariableLengthData& data)
+{
+    HLAfixedRecord markingRecord;
+    markingRecord.appendElement(HLAoctet());
+    markingRecord.appendElement(HLAfixedArray(HLAoctet(), 11));
+    markingRecord.decode(data);
+
+    const HLAfixedArray& markingData = static_cast<const HLAfixedArray&>(markingRecord.get(1));
+
+    std::string decoded;
+    decoded.reserve(markingData.size());
+
+    for (size_t i = 0; i < markingData.size(); ++i)
+    {
+        const Octet value = static_cast<const HLAoctet&>(markingData.get(i)).get();
+        decoded.push_back(static_cast<char>(value));
+    }
+
+    return trimRight(decoded);
+}
+
+VariableLengthData encodeSpatialStatic(const SpatialData& spatial)
+{
+    const HLAoctet staticDiscriminant(kDeadReckoningStatic);
+    const HLAfixedRecord spatialStatic = makeSpatialStaticRecord(spatial);
+
+    const HLAoctet discriminantPrototype(static_cast<Octet>(0));
+    HLAvariantRecord spatialVariant(discriminantPrototype);
+    spatialVariant.addVariant(staticDiscriminant, spatialStatic);
+    spatialVariant.setDiscriminant(staticDiscriminant);
+    spatialVariant.setVariant(staticDiscriminant, spatialStatic);
+
+    return spatialVariant.encode();
+}
+
+SpatialData decodeSpatial(const VariableLengthData& data)
+{
+    HLAvariantRecord spatialVariant = makeSpatialVariantPrototype();
+    spatialVariant.decode(data);
+
+    const HLAfixedRecord& spatialRecord = static_cast<const HLAfixedRecord&>(spatialVariant.getVariant());
+    const HLAfixedRecord& worldLocation = static_cast<const HLAfixedRecord&>(spatialRecord.get(0));
+    const HLAoctet& isFrozen = static_cast<const HLAoctet&>(spatialRecord.get(1));
+    const HLAfixedRecord& orientation = static_cast<const HLAfixedRecord&>(spatialRecord.get(2));
+
+    SpatialData decoded;
+    decoded.x = static_cast<const HLAfloat64BE&>(worldLocation.get(0)).get();
+    decoded.y = static_cast<const HLAfloat64BE&>(worldLocation.get(1)).get();
+    decoded.z = static_cast<const HLAfloat64BE&>(worldLocation.get(2)).get();
+    decoded.isFrozen = (isFrozen.get() != 0);
+    decoded.psi = static_cast<const HLAfloat32BE&>(orientation.get(0)).get();
+    decoded.theta = static_cast<const HLAfloat32BE&>(orientation.get(1)).get();
+    decoded.phi = static_cast<const HLAfloat32BE&>(orientation.get(2)).get();
+
+    return decoded;
+}
+} // namespace
 
 SoldierFederate::SoldierFederate(const std::string& federateName)
-    : federateName_(federateName)
+    : federateName_(federateName), federationExecutionName_(L"SoldierFederation")
 {
+    localSoldier_.objectName = federateName_;
+    localSoldier_.marking = federateName_.substr(0, std::min<size_t>(11, federateName_.size()));
+    localSoldier_.siteId = parseEnvUInt16("RPR_SITE_ID", 1);
+    localSoldier_.applicationId = parseEnvUInt16("RPR_APPLICATION_ID", 1);
+    localSoldier_.entityNumber = parseEnvUInt16("RPR_ENTITY_NUMBER", deriveEntityNumber(federateName_));
+    localSoldier_.forceIdentifier = parseEnvUInt8("RPR_FORCE_ID", kForceFriendly);
+    localSoldier_.hasSpatial = true;
+
     openLogFile();
     logMessage("INFO", "Starting federate process.");
 
@@ -130,14 +516,6 @@ SoldierFederate::SoldierFederate(const std::string& federateName)
         initializeRTI();
         createOrJoinFederation();
         publishAndSubscribe();
-
-        // Set initial local soldier state
-        localSoldier_.name = federateName;
-        localSoldier_.x = 0.0;
-        localSoldier_.y = 0.0;
-        localSoldier_.z = 0.0;
-        localSoldier_.health = 100;
-        localSoldier_.alive = true;
 
         logMessage("INFO", "Initialization completed successfully.");
     }
@@ -169,24 +547,33 @@ SoldierFederate::~SoldierFederate()
     {
         if (rtiAmb_)
         {
-            if (joinedFederation_)
+            if (connectionLost_)
+            {
+                logMessage("WARN", "Skipping RTI resign and destroy because the connection was already lost.");
+            }
+            else if (joinedFederation_)
             {
                 rtiAmb_->resignFederationExecution(rti1516e::NO_ACTION);
+                joinedFederation_ = false;
                 logMessage("INFO", "Resigned from federation execution.");
-            }
 
-            try
-            {
-                rtiAmb_->destroyFederationExecution(L"SoldierFederation");
-                logMessage("INFO", "Destroyed federation SoldierFederation.");
+                try
+                {
+                    rtiAmb_->destroyFederationExecution(federationExecutionName_);
+                    logMessage("INFO", "Destroyed federation " + toNarrow(federationExecutionName_) + ".");
+                }
+                catch (const FederationExecutionDoesNotExist&)
+                {
+                    logMessage("INFO", "Federation already destroyed.");
+                }
+                catch (const FederatesCurrentlyJoined&)
+                {
+                    logMessage("INFO", "Federation still has joined federates; destroy skipped.");
+                }
             }
-            catch (const FederationExecutionDoesNotExist&)
+            else
             {
-                logMessage("INFO", "Federation already destroyed.");
-            }
-            catch (const FederatesCurrentlyJoined&)
-            {
-                logMessage("INFO", "Federation still has joined federates; destroy skipped.");
+                logMessage("INFO", "Skipping resign because the federate never fully joined.");
             }
         }
     }
@@ -253,31 +640,134 @@ void SoldierFederate::logMessage(const std::string& level, const std::string& me
     logFile_.flush();
 }
 
+void SoldierFederate::connectionLost(const std::wstring& faultDescription)
+{
+    connectionLost_ = true;
+    joinedFederation_ = false;
+    shutdownReason_ = "RTI connection lost: " + toNarrow(faultDescription);
+    logMessage("ERROR", shutdownReason_);
+}
+
+void SoldierFederate::objectInstanceNameReservationSucceeded(const std::wstring& objectInstanceName)
+{
+    if (objectInstanceName == pendingObjectInstanceName_)
+    {
+        objectInstanceNameReserved_ = true;
+        objectInstanceNameReservationPending_ = false;
+    }
+
+    logMessage("INFO", "Object instance name reserved: " + toNarrow(objectInstanceName) + ".");
+}
+
+void SoldierFederate::objectInstanceNameReservationFailed(const std::wstring& objectInstanceName)
+{
+    if (objectInstanceName == pendingObjectInstanceName_)
+    {
+        objectInstanceNameReserved_ = false;
+        objectInstanceNameReservationPending_ = false;
+    }
+
+    shutdownReason_ = "Object instance name reservation failed: " + toNarrow(objectInstanceName);
+    logMessage("ERROR", shutdownReason_);
+}
+
+void SoldierFederate::reserveLocalObjectInstanceName(const std::wstring& objectInstanceName)
+{
+    pendingObjectInstanceName_ = objectInstanceName;
+    objectInstanceNameReserved_ = false;
+    objectInstanceNameReservationPending_ = true;
+
+    logMessage("INFO", "Requesting object instance name reservation for " + toNarrow(objectInstanceName) + ".");
+    rtiAmb_->reserveObjectInstanceName(objectInstanceName);
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    while (objectInstanceNameReservationPending_)
+    {
+        rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
+
+        if (std::chrono::steady_clock::now() >= deadline)
+        {
+            objectInstanceNameReservationPending_ = false;
+            objectInstanceNameReserved_ = false;
+            shutdownReason_ = "Timed out waiting for object instance name reservation: " + toNarrow(objectInstanceName);
+            logMessage("ERROR", shutdownReason_);
+            throw std::runtime_error(shutdownReason_);
+        }
+    }
+
+    if (!objectInstanceNameReserved_)
+    {
+        if (shutdownReason_ == "normal shutdown")
+        {
+            shutdownReason_ = "Object instance name reservation was not granted: " + toNarrow(objectInstanceName);
+        }
+
+        logMessage("ERROR", shutdownReason_);
+        throw std::runtime_error(shutdownReason_);
+    }
+}
+
 void SoldierFederate::initializeRTI()
 {
     logMessage("INFO", "Creating RTI ambassador.");
 
-    // Create the RTI ambassador
     std::unique_ptr<RTIambassadorFactory> rtiAmbFactory(new RTIambassadorFactory());
     RTIambassador* rtiAmb = rtiAmbFactory->createRTIambassador().release();
     rtiAmb_ = std::unique_ptr<RTIambassador>(rtiAmb);
 
-    // Connect to RTI
     rtiAmb_->connect(*this, HLA_EVOKED);
     logMessage("INFO", "Connected to RTI.");
 }
 
 void SoldierFederate::createOrJoinFederation()
 {
-    // Simple FOM file path relative to executable
-    const std::wstring federationName = L"SoldierFederation";
-    const std::wstring fomPath = L"../foms/SoldierFOM.xml";
+    namespace fs = std::filesystem;
+
+    const char* federationNameEnv = std::getenv("FEDERATION_NAME");
+    if (federationNameEnv != nullptr && federationNameEnv[0] != '\0')
+    {
+        federationExecutionName_ = toWide(federationNameEnv);
+    }
+    else
+    {
+        federationExecutionName_ = L"SoldierFederation";
+    }
+
+    std::string fomPath;
+    const char* fomPathEnv = std::getenv("RPR_FOM_PATH");
+    if (fomPathEnv != nullptr && fomPathEnv[0] != '\0')
+    {
+        fomPath = fomPathEnv;
+    }
+    else if (fs::exists(fs::path("../foms/RPR_FOM_v2.0_1516-2010.xml")))
+    {
+        fomPath = "../foms/RPR_FOM_v2.0_1516-2010.xml";
+    }
+    else
+    {
+        fomPath = "C:/MAK/vrforces5.2e/bin64/RPR_FOM_v2.0_1516-2010.xml";
+    }
+
+    if (!fs::exists(fs::path(fomPath)))
+    {
+        shutdownReason_ = "RPR FOM not found at path: " + fomPath;
+        logMessage("ERROR", shutdownReason_);
+        throw std::runtime_error(shutdownReason_);
+    }
+
+    logMessage("INFO", "Using federation " + toNarrow(federationExecutionName_) + ".");
+    logMessage("INFO", "Using FOM module " + fomPath + ".");
+
+    const std::wstring fomPathWide = toWide(fomPath);
+    const std::wstring federateNameWide = toWide(federateName_);
+    bool createdFederation = false;
 
     try
     {
-        rtiAmb_->createFederationExecution(federationName, std::vector<std::wstring>{fomPath});
-        std::wcout << L"Created federation: SoldierFederation\n";
-        logMessage("INFO", "Created federation SoldierFederation.");
+        rtiAmb_->createFederationExecution(federationExecutionName_, std::vector<std::wstring>{fomPathWide});
+        createdFederation = true;
+        std::wcout << L"Created federation: " << federationExecutionName_ << L"\n";
+        logMessage("INFO", "Created federation " + toNarrow(federationExecutionName_) + ".");
     }
     catch (const FederationExecutionAlreadyExists&)
     {
@@ -285,101 +775,122 @@ void SoldierFederate::createOrJoinFederation()
         logMessage("INFO", "Federation already exists. Joining existing federation.");
     }
 
-    federateHandle_ = rtiAmb_->joinFederationExecution(
-        std::wstring(federateName_.begin(), federateName_.end()),
-        L"Soldier",
-        federationName);
+    const bool joinWithAdditionalFom = parseEnvBool("RPR_JOIN_WITH_ADDITIONAL_FOM", false);
+
+    if (createdFederation)
+    {
+        federateHandle_ = rtiAmb_->joinFederationExecution(
+            federateNameWide,
+            L"Human",
+            federationExecutionName_);
+    }
+    else if (joinWithAdditionalFom)
+    {
+        try
+        {
+            logMessage("INFO", "Attempting join with additional RPR module because RPR_JOIN_WITH_ADDITIONAL_FOM is enabled.");
+            federateHandle_ = rtiAmb_->joinFederationExecution(
+                federateNameWide,
+                L"Human",
+                federationExecutionName_,
+                std::vector<std::wstring>{fomPathWide});
+        }
+        catch (const Exception& ex)
+        {
+            logMessage("WARN", "Join with additional RPR module failed: " + toNarrow(ex.what()) + ". Retrying join without additional modules.");
+            federateHandle_ = rtiAmb_->joinFederationExecution(
+                federateNameWide,
+                L"Human",
+                federationExecutionName_);
+        }
+    }
+    else
+    {
+        logMessage("INFO", "Joining existing federation without additional FOM modules (set RPR_JOIN_WITH_ADDITIONAL_FOM=1 to force a modular merge attempt).");
+        federateHandle_ = rtiAmb_->joinFederationExecution(
+            federateNameWide,
+            L"Human",
+            federationExecutionName_);
+    }
+
     joinedFederation_ = true;
-    std::wcout << L"Joined federation as " << std::wstring(federateName_.begin(), federateName_.end()) << L"\n";
+
+    std::wcout << L"Joined federation as " << toWide(federateName_) << L"\n";
     logMessage("INFO", "Joined federation as " + federateName_ + ".");
 }
 
 void SoldierFederate::publishAndSubscribe()
 {
-    soldierClassHandle_ = rtiAmb_->getObjectClassHandle(L"HLAobjectRoot.Soldier");
-    positionXHandle_ = rtiAmb_->getAttributeHandle(soldierClassHandle_, L"positionX");
-    positionYHandle_ = rtiAmb_->getAttributeHandle(soldierClassHandle_, L"positionY");
-    positionZHandle_ = rtiAmb_->getAttributeHandle(soldierClassHandle_, L"positionZ");
-    healthHandle_ = rtiAmb_->getAttributeHandle(soldierClassHandle_, L"health");
+    std::wstring selectedClassName;
+    const std::vector<std::wstring> classCandidates = {
+        L"HLAobjectRoot.BaseEntity.PhysicalEntity.Lifeform.Human",
+        L"BaseEntity.PhysicalEntity.Lifeform.Human"
+    };
 
-    AttributeHandleSet publishSet;
-    publishSet.insert(positionXHandle_);
-    publishSet.insert(positionYHandle_);
-    publishSet.insert(positionZHandle_);
-    publishSet.insert(healthHandle_);
+    for (const auto& className : classCandidates)
+    {
+        try
+        {
+            humanClassHandle_ = rtiAmb_->getObjectClassHandle(className);
+            selectedClassName = className;
+            break;
+        }
+        catch (const NameNotFound&)
+        {
+            logMessage("WARN", "RPR class lookup failed for: " + toNarrow(className));
+        }
+    }
 
-    rtiAmb_->publishObjectClassAttributes(soldierClassHandle_, publishSet);
-    rtiAmb_->subscribeObjectClassAttributes(soldierClassHandle_, publishSet);
+    if (selectedClassName.empty())
+    {
+        shutdownReason_ = "RPR Human class not found in current federation FOM. Check FEDERATION_NAME and ensure RPR_FOM_v2.0_1516-2010.xml is part of the federation modules.";
+        logMessage("ERROR", shutdownReason_);
+        throw std::runtime_error(shutdownReason_);
+    }
 
-    // Interaction
-    fireInteractionHandle_ = rtiAmb_->getInteractionClassHandle(L"HLAinteractionRoot.FireWeapon");
-    targetNameHandle_ = rtiAmb_->getParameterHandle(fireInteractionHandle_, L"targetName");
-    damageHandle_ = rtiAmb_->getParameterHandle(fireInteractionHandle_, L"damage");
+    logMessage("INFO", "Using RPR object class: " + toNarrow(selectedClassName));
 
-    rtiAmb_->publishInteractionClass(fireInteractionHandle_);
-    rtiAmb_->subscribeInteractionClass(fireInteractionHandle_);
+    entityTypeHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"EntityType");
+    entityIdentifierHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"EntityIdentifier");
+    spatialHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"Spatial");
+    forceIdentifierHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"ForceIdentifier");
+    markingHandle_ = rtiAmb_->getAttributeHandle(humanClassHandle_, L"Marking");
 
-    // Register ourselves
-    localSoldierHandle_ = rtiAmb_->registerObjectInstance(soldierClassHandle_, std::wstring(federateName_.begin(), federateName_.end()));
-    std::wcout << L"Registered local soldier object instance.\n";
-    logMessage("INFO", "Published/subscribed Soldier class and FireWeapon interaction.");
-    logMessage("INFO", "Registered local soldier object instance.");
+    AttributeHandleSet attributes;
+    attributes.insert(entityTypeHandle_);
+    attributes.insert(entityIdentifierHandle_);
+    attributes.insert(spatialHandle_);
+    attributes.insert(forceIdentifierHandle_);
+    attributes.insert(markingHandle_);
+
+    rtiAmb_->publishObjectClassAttributes(humanClassHandle_, attributes);
+    rtiAmb_->subscribeObjectClassAttributes(humanClassHandle_, attributes);
+
+    const std::wstring objectInstanceName = toWide(federateName_);
+    reserveLocalObjectInstanceName(objectInstanceName);
+    localSoldierHandle_ = rtiAmb_->registerObjectInstance(humanClassHandle_, objectInstanceName);
+
+    std::wcout << L"Registered local human lifeform object instance.\n";
+    logMessage("INFO", "Published/subscribed RPR Human attributes.");
+    logMessage("INFO", "Registered local human object instance with reserved name " + federateName_ + ".");
 }
 
 void SoldierFederate::updateSoldierAttributes()
 {
-    const auto xData = encodeDouble(localSoldier_.x);
-    const auto yData = encodeDouble(localSoldier_.y);
-    const auto zData = encodeDouble(localSoldier_.z);
-    const auto healthData = encodeInt32(localSoldier_.health);
-
     AttributeHandleValueMap updates;
-    updates[positionXHandle_] = VariableLengthData(xData.data(), xData.size());
-    updates[positionYHandle_] = VariableLengthData(yData.data(), yData.size());
-    updates[positionZHandle_] = VariableLengthData(zData.data(), zData.size());
-    updates[healthHandle_] = VariableLengthData(healthData.data(), healthData.size());
 
-    rtiAmb_->updateAttributeValues(localSoldierHandle_, updates, rti1516e::VariableLengthData());
-}
+    const EntityTypeData entityType;
+    const EntityIdentifierData entityIdentifier{localSoldier_.siteId, localSoldier_.applicationId, localSoldier_.entityNumber};
+    const SpatialData spatial{localSoldier_.x, localSoldier_.y, localSoldier_.z,
+                              localSoldier_.psi, localSoldier_.theta, localSoldier_.phi, false};
 
-void SoldierFederate::sendFireInteraction(const std::string& targetName)
-{
-    if (!localSoldier_.alive)
-        return;
+    updates[entityTypeHandle_] = encodeEntityType(entityType);
+    updates[entityIdentifierHandle_] = encodeEntityIdentifier(entityIdentifier);
+    updates[spatialHandle_] = encodeSpatialStatic(spatial);
+    updates[forceIdentifierHandle_] = encodeForceIdentifier(localSoldier_.forceIdentifier);
+    updates[markingHandle_] = encodeMarking(localSoldier_.marking);
 
-    const auto targetData = encodeString(targetName);
-    const auto damageData = encodeInt32(25);
-
-    ParameterHandleValueMap params;
-    params[targetNameHandle_] = VariableLengthData(targetData.data(), targetData.size());
-    params[damageHandle_] = VariableLengthData(damageData.data(), damageData.size());
-
-    rtiAmb_->sendInteraction(fireInteractionHandle_, params, VariableLengthData());
-    std::wcout << L"Fired at " << std::wstring(targetName.begin(), targetName.end()) << L"\n";
-    logMessage("INFO", "Sent FireWeapon interaction to target=" + targetName + ".");
-}
-
-void SoldierFederate::maybeFireAtEnemy()
-{
-    if (knownSoldiers_.empty())
-        return;
-
-    // Choose a random soldier other than ourselves
-    std::vector<std::string> candidates;
-    for (auto& kv : knownSoldiers_)
-    {
-        if (kv.first != localSoldierHandle_ && kv.second.alive)
-            candidates.push_back(kv.second.name);
-    }
-
-    if (candidates.empty())
-        return;
-
-    static std::mt19937 rng((unsigned)std::chrono::system_clock::now().time_since_epoch().count());
-    std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
-    auto targetName = candidates[dist(rng)];
-
-    sendFireInteraction(targetName);
+    rtiAmb_->updateAttributeValues(localSoldierHandle_, updates, VariableLengthData());
 }
 
 void SoldierFederate::mainLoop()
@@ -387,17 +898,25 @@ void SoldierFederate::mainLoop()
     std::wcout << L"Entering main loop. Press Ctrl+C to exit.\n";
     logMessage("INFO", "Entering main loop.");
 
+    std::mt19937 rng(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
+    std::uniform_real_distribution<double> step(-1.0, 1.0);
+
     try
     {
-        while (localSoldier_.alive)
+        while (!connectionLost_)
         {
-            // simulate movement
-            localSoldier_.x += (std::rand() % 21 - 10) * 0.1;
-            localSoldier_.y += (std::rand() % 21 - 10) * 0.1;
+            const double dx = step(rng) * 0.5;
+            const double dy = step(rng) * 0.5;
+
+            localSoldier_.x += dx;
+            localSoldier_.y += dy;
+
+            if (std::fabs(dx) > 0.0001 || std::fabs(dy) > 0.0001)
+            {
+                localSoldier_.psi = static_cast<float>(std::atan2(dy, dx));
+            }
 
             updateSoldierAttributes();
-
-            maybeFireAtEnemy();
 
             rtiAmb_->evokeMultipleCallbacks(0.1, 0.2);
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -422,9 +941,10 @@ void SoldierFederate::mainLoop()
         throw;
     }
 
-    shutdownReason_ = "Local soldier was killed (health <= 0).";
-    logMessage("WARN", shutdownReason_);
-    std::wcout << L"Local soldier is dead. Exiting.\n";
+    if (connectionLost_)
+    {
+        logMessage("WARN", "Main loop exited due to RTI connection loss.");
+    }
 }
 
 void SoldierFederate::run()
@@ -460,13 +980,13 @@ void SoldierFederate::discoverObjectInstance(rti1516e::ObjectInstanceHandle theO
                                             rti1516e::ObjectClassHandle theObjectClass,
                                             const std::wstring& objectName)
 {
-    // Track discovered soldiers
     SoldierState state;
-    state.name = std::string(objectName.begin(), objectName.end());
+    state.objectName = toNarrow(objectName);
+    state.marking = state.objectName;
     knownSoldiers_[theObject] = state;
 
-    std::wcout << L"Discovered soldier: " << std::wstring(state.name.begin(), state.name.end()) << L" (handle=" << theObject.toString() << L")\n";
-    logMessage("INFO", "Discovered soldier=" + state.name + " handle=" + toNarrow(theObject.toString()) + ".");
+    std::wcout << L"Discovered entity: " << objectName << L" (handle=" << theObject.toString() << L")\n";
+    logMessage("INFO", "Discovered entity=" + state.objectName + " handle=" + toNarrow(theObject.toString()) + ".");
 }
 
 void SoldierFederate::reflectAttributeValues(rti1516e::ObjectInstanceHandle theObject,
@@ -478,75 +998,72 @@ void SoldierFederate::reflectAttributeValues(rti1516e::ObjectInstanceHandle theO
 {
     auto it = knownSoldiers_.find(theObject);
     if (it == knownSoldiers_.end())
-        return;
+    {
+        SoldierState state;
+        state.objectName = toNarrow(theObject.toString());
+        it = knownSoldiers_.insert(std::make_pair(theObject, state)).first;
+    }
 
     SoldierState& state = it->second;
 
     for (const auto& kv : theAttributeValues)
     {
-        if (kv.first == positionXHandle_)
-            state.x = decodeDouble(kv.second);
-        else if (kv.first == positionYHandle_)
-            state.y = decodeDouble(kv.second);
-        else if (kv.first == positionZHandle_)
-            state.z = decodeDouble(kv.second);
-        else if (kv.first == healthHandle_)
+        try
         {
-            state.health = decodeInt32(kv.second);
-            state.alive = state.health > 0;
+            if (kv.first == entityIdentifierHandle_)
+            {
+                const EntityIdentifierData id = decodeEntityIdentifier(kv.second);
+                state.siteId = id.siteId;
+                state.applicationId = id.applicationId;
+                state.entityNumber = id.entityNumber;
+            }
+            else if (kv.first == forceIdentifierHandle_)
+            {
+                state.forceIdentifier = decodeForceIdentifier(kv.second);
+            }
+            else if (kv.first == markingHandle_)
+            {
+                const std::string decodedMarking = decodeMarking(kv.second);
+                if (!decodedMarking.empty())
+                {
+                    state.marking = decodedMarking;
+                }
+            }
+            else if (kv.first == spatialHandle_)
+            {
+                const SpatialData spatial = decodeSpatial(kv.second);
+                state.x = spatial.x;
+                state.y = spatial.y;
+                state.z = spatial.z;
+                state.psi = spatial.psi;
+                state.theta = spatial.theta;
+                state.phi = spatial.phi;
+                state.hasSpatial = true;
+            }
+            else if (kv.first == entityTypeHandle_)
+            {
+                // Decode for validation; fields are not currently used for behavior.
+                (void)decodeEntityType(kv.second);
+            }
+        }
+        catch (const std::exception& ex)
+        {
+            logMessage("WARN", "Failed to decode reflected attribute for object " + state.objectName + ": " + ex.what());
+        }
+        catch (...)
+        {
+            logMessage("WARN", "Failed to decode reflected attribute for object " + state.objectName + ": unknown decode error");
         }
     }
 
     if (theObject == localSoldierHandle_)
     {
-        const bool wasAlive = localSoldier_.alive;
-        localSoldier_ = state;
-
-        if (wasAlive && !localSoldier_.alive)
-        {
-            shutdownReason_ = "Local soldier marked dead by reflected attributes.";
-            logMessage("WARN", shutdownReason_);
-        }
-    }
-}
-
-void SoldierFederate::receiveInteraction(rti1516e::InteractionClassHandle theInteraction,
-                                        const rti1516e::ParameterHandleValueMap& theParameterValues,
-                                        const rti1516e::VariableLengthData& theUserSuppliedTag,
-                                        rti1516e::OrderType sentOrder,
-                                        rti1516e::TransportationType theType,
-                                        rti1516e::SupplementalReceiveInfo theReceiveInfo)
-{
-    if (theInteraction != fireInteractionHandle_)
-        return;
-
-    auto itTarget = theParameterValues.find(targetNameHandle_);
-    auto itDamage = theParameterValues.find(damageHandle_);
-
-    if (itTarget == theParameterValues.end() || itDamage == theParameterValues.end())
-        return;
-
-    auto targetName = decodeString(itTarget->second);
-    auto damage = decodeInt32(itDamage->second);
-    logMessage("INFO", "Received FireWeapon interaction target=" + targetName + " damage=" + std::to_string(damage) + ".");
-
-    if (targetName == localSoldier_.name)
-    {
-        localSoldier_.health -= damage;
-
-        if (localSoldier_.health <= 0)
-        {
-            localSoldier_.alive = false;
-            shutdownReason_ = "Killed by FireWeapon interaction (damage=" + std::to_string(damage) + ").";
-            logMessage("ERROR", shutdownReason_);
-            std::cout << "I'm hit! Killed by enemy.\n";
-        }
-        else
-        {
-            logMessage("WARN", "Hit by enemy fire. Remaining health=" + std::to_string(localSoldier_.health) + ".");
-            std::cout << "I'm hit! Health=" << localSoldier_.health << "\n";
-        }
-
-        updateSoldierAttributes();
+        localSoldier_.x = state.x;
+        localSoldier_.y = state.y;
+        localSoldier_.z = state.z;
+        localSoldier_.psi = state.psi;
+        localSoldier_.theta = state.theta;
+        localSoldier_.phi = state.phi;
+        localSoldier_.hasSpatial = state.hasSpatial;
     }
 }
