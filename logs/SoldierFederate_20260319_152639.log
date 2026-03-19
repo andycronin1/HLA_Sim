@@ -1,0 +1,4 @@
+[2026-03-19 15:26:39] [INFO] [SoldierFederate] Log file created at logs\SoldierFederate_20260319_152639.log
+[2026-03-19 15:26:39] [INFO] [SoldierFederate] Starting federate process.
+[2026-03-19 15:26:39] [INFO] [SoldierFederate] Creating RTI ambassador.
+[2026-03-19 15:26:41] [ERROR] [SoldierFederate] Initialization RTI exception: RTIinternalError No connection configuration was specified.
