@@ -46,6 +46,10 @@ constexpr uint8_t kMarkingAscii = 1;
 constexpr double kEngagementRangeMeters = 5.0;
 constexpr double kEngagementRangeMetersSquared = kEngagementRangeMeters * kEngagementRangeMeters;
 constexpr std::chrono::milliseconds kShotCooldown(1000);
+constexpr float kProjectileSpeedMetersPerSecond = 800.0f;
+constexpr uint16_t kFuseTypeContact = 1000;
+constexpr uint16_t kWarheadTypeHighExplosive = 1000;
+constexpr uint8_t kDetonationResultEntityImpact = 1;
 
 struct EntityTypeData
 {
@@ -56,6 +60,16 @@ struct EntityTypeData
     uint8_t subcategory = 0;
     uint8_t specific = 0;
     uint8_t extra = 0;
+};
+
+const EntityTypeData kMunitionEntityType{
+    2,    // Munition
+    1,    // Land
+    225,
+    1,
+    0,
+    0,
+    0
 };
 
 struct EntityIdentifierData
@@ -412,6 +426,60 @@ VariableLengthData encodeForceIdentifier(uint8_t forceIdentifier)
 {
     HLAoctet encoded(forceIdentifier);
     return encoded.encode();
+}
+
+VariableLengthData encodeUnsignedInteger16(uint16_t value)
+{
+    HLAinteger16BE encoded(static_cast<Integer16>(value));
+    return encoded.encode();
+}
+
+VariableLengthData encodeUnsignedInteger32(uint32_t value)
+{
+    HLAinteger32BE encoded(static_cast<Integer32>(value));
+    return encoded.encode();
+}
+
+VariableLengthData encodeLengthMeterFloat32(float value)
+{
+    HLAfloat32BE encoded(value);
+    return encoded.encode();
+}
+
+VariableLengthData encodeDetonationResultCode(uint8_t resultCode)
+{
+    HLAoctet encoded(resultCode);
+    return encoded.encode();
+}
+
+VariableLengthData encodeRtiObjectId(const std::string& objectId)
+{
+    std::vector<char> encoded;
+    encoded.reserve(objectId.size() + 1);
+    encoded.insert(encoded.end(), objectId.begin(), objectId.end());
+    encoded.push_back('\0');
+    return VariableLengthData(encoded.data(), encoded.size());
+}
+
+VariableLengthData encodeEventIdentifier(uint16_t eventCount, const std::string& issuingObjectId)
+{
+    std::vector<char> encoded;
+    encoded.reserve(2 + issuingObjectId.size() + 1);
+    encoded.push_back(static_cast<char>((eventCount >> 8) & 0xFF));
+    encoded.push_back(static_cast<char>(eventCount & 0xFF));
+    encoded.insert(encoded.end(), issuingObjectId.begin(), issuingObjectId.end());
+    encoded.push_back('\0');
+    return VariableLengthData(encoded.data(), encoded.size());
+}
+
+VariableLengthData encodeWorldLocation(double x, double y, double z)
+{
+    return makeWorldLocationRecord(x, y, z).encode();
+}
+
+VariableLengthData encodeVelocityVector(float x, float y, float z)
+{
+    return makeVector3FloatRecord(x, y, z).encode();
 }
 
 uint8_t decodeForceIdentifier(const VariableLengthData& data)
@@ -869,6 +937,97 @@ void SoldierFederate::publishAndSubscribe()
     rtiAmb_->publishObjectClassAttributes(humanClassHandle_, attributes);
     rtiAmb_->subscribeObjectClassAttributes(humanClassHandle_, attributes);
 
+    combatInteractionsEnabled_ = false;
+
+    std::wstring weaponFireClassName;
+    const std::vector<std::wstring> weaponFireClassCandidates = {
+        L"HLAinteractionRoot.WeaponFire",
+        L"WeaponFire"
+    };
+
+    for (const auto& className : weaponFireClassCandidates)
+    {
+        try
+        {
+            weaponFireClassHandle_ = rtiAmb_->getInteractionClassHandle(className);
+            weaponFireClassName = className;
+            break;
+        }
+        catch (const NameNotFound&)
+        {
+            logMessage("WARN", "WeaponFire class lookup failed for: " + toNarrow(className));
+        }
+    }
+
+    std::wstring munitionDetonationClassName;
+    const std::vector<std::wstring> munitionDetonationClassCandidates = {
+        L"HLAinteractionRoot.MunitionDetonation",
+        L"MunitionDetonation"
+    };
+
+    for (const auto& className : munitionDetonationClassCandidates)
+    {
+        try
+        {
+            munitionDetonationClassHandle_ = rtiAmb_->getInteractionClassHandle(className);
+            munitionDetonationClassName = className;
+            break;
+        }
+        catch (const NameNotFound&)
+        {
+            logMessage("WARN", "MunitionDetonation class lookup failed for: " + toNarrow(className));
+        }
+    }
+
+    if (!weaponFireClassName.empty() && !munitionDetonationClassName.empty())
+    {
+        try
+        {
+            weaponFireEventIdentifierHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"EventIdentifier");
+            weaponFireFireControlSolutionRangeHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"FireControlSolutionRange");
+            weaponFireFireMissionIndexHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"FireMissionIndex");
+            weaponFireFiringLocationHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"FiringLocation");
+            weaponFireFiringObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"FiringObjectIdentifier");
+            weaponFireFuseTypeHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"FuseType");
+            weaponFireInitialVelocityVectorHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"InitialVelocityVector");
+            weaponFireMunitionObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"MunitionObjectIdentifier");
+            weaponFireMunitionTypeHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"MunitionType");
+            weaponFireQuantityFiredHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"QuantityFired");
+            weaponFireRateOfFireHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"RateOfFire");
+            weaponFireTargetObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"TargetObjectIdentifier");
+            weaponFireWarheadTypeHandle_ = rtiAmb_->getParameterHandle(weaponFireClassHandle_, L"WarheadType");
+
+            munitionDetonationDetonationLocationHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"DetonationLocation");
+            munitionDetonationDetonationResultCodeHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"DetonationResultCode");
+            munitionDetonationEventIdentifierHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"EventIdentifier");
+            munitionDetonationFiringObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"FiringObjectIdentifier");
+            munitionDetonationFinalVelocityVectorHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"FinalVelocityVector");
+            munitionDetonationFuseTypeHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"FuseType");
+            munitionDetonationMunitionObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"MunitionObjectIdentifier");
+            munitionDetonationMunitionTypeHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"MunitionType");
+            munitionDetonationQuantityFiredHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"QuantityFired");
+            munitionDetonationRateOfFireHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"RateOfFire");
+            munitionDetonationRelativeDetonationLocationHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"RelativeDetonationLocation");
+            munitionDetonationTargetObjectIdentifierHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"TargetObjectIdentifier");
+            munitionDetonationWarheadTypeHandle_ = rtiAmb_->getParameterHandle(munitionDetonationClassHandle_, L"WarheadType");
+
+            rtiAmb_->publishInteractionClass(weaponFireClassHandle_);
+            rtiAmb_->publishInteractionClass(munitionDetonationClassHandle_);
+            combatInteractionsEnabled_ = true;
+
+            logMessage("INFO", "Published RPR interactions: " + toNarrow(weaponFireClassName) + " and " + toNarrow(munitionDetonationClassName) + ".");
+        }
+        catch (const Exception& ex)
+        {
+            combatInteractionsEnabled_ = false;
+            logMessage("WARN", "Failed to enable combat interactions: " + toNarrow(ex.what()));
+        }
+    }
+    else
+    {
+        logMessage("WARN", "Combat interactions disabled because WeaponFire and/or MunitionDetonation classes were not found.");
+    }
+
     AttributeHandleSet spawnSeedAttributes;
     spawnSeedAttributes.insert(spatialHandle_);
     spawnSeedAttributes.insert(entityIdentifierHandle_);
@@ -984,6 +1143,77 @@ bool SoldierFederate::initializeSpawnFromRemoteEntities()
     return false;
 }
 
+void SoldierFederate::sendWeaponFireAndDetonation(rti1516e::ObjectInstanceHandle targetHandle,
+                                                  const SoldierState& targetState,
+                                                  double dx,
+                                                  double dy,
+                                                  double dz,
+                                                  double distanceMeters)
+{
+    if (!combatInteractionsEnabled_)
+    {
+        return;
+    }
+
+    const std::string firingObjectId = toNarrow(localSoldierHandle_.toString());
+    const std::string targetObjectId = toNarrow(targetHandle.toString());
+    const uint16_t eventCount = nextEventCount_;
+
+    ++nextEventCount_;
+    if (nextEventCount_ == 0)
+    {
+        nextEventCount_ = 1;
+    }
+
+    const std::string munitionObjectId = firingObjectId + ":M:" + std::to_string(eventCount);
+
+    float xVelocity = 0.0f;
+    float yVelocity = 0.0f;
+    float zVelocity = 0.0f;
+
+    if (distanceMeters > 0.0001)
+    {
+        const double velocityScale = static_cast<double>(kProjectileSpeedMetersPerSecond) / distanceMeters;
+        xVelocity = static_cast<float>(dx * velocityScale);
+        yVelocity = static_cast<float>(dy * velocityScale);
+        zVelocity = static_cast<float>(dz * velocityScale);
+    }
+
+    ParameterHandleValueMap weaponFireParameters;
+    weaponFireParameters[weaponFireEventIdentifierHandle_] = encodeEventIdentifier(eventCount, firingObjectId);
+    weaponFireParameters[weaponFireFireControlSolutionRangeHandle_] = encodeLengthMeterFloat32(static_cast<float>(distanceMeters));
+    weaponFireParameters[weaponFireFireMissionIndexHandle_] = encodeUnsignedInteger32(static_cast<uint32_t>(eventCount));
+    weaponFireParameters[weaponFireFiringLocationHandle_] = encodeWorldLocation(localSoldier_.x, localSoldier_.y, localSoldier_.z);
+    weaponFireParameters[weaponFireFiringObjectIdentifierHandle_] = encodeRtiObjectId(firingObjectId);
+    weaponFireParameters[weaponFireFuseTypeHandle_] = encodeUnsignedInteger16(kFuseTypeContact);
+    weaponFireParameters[weaponFireInitialVelocityVectorHandle_] = encodeVelocityVector(xVelocity, yVelocity, zVelocity);
+    weaponFireParameters[weaponFireMunitionObjectIdentifierHandle_] = encodeRtiObjectId(munitionObjectId);
+    weaponFireParameters[weaponFireMunitionTypeHandle_] = encodeEntityType(kMunitionEntityType);
+    weaponFireParameters[weaponFireQuantityFiredHandle_] = encodeUnsignedInteger16(1);
+    weaponFireParameters[weaponFireRateOfFireHandle_] = encodeUnsignedInteger16(0);
+    weaponFireParameters[weaponFireTargetObjectIdentifierHandle_] = encodeRtiObjectId(targetObjectId);
+    weaponFireParameters[weaponFireWarheadTypeHandle_] = encodeUnsignedInteger16(kWarheadTypeHighExplosive);
+
+    rtiAmb_->sendInteraction(weaponFireClassHandle_, weaponFireParameters, VariableLengthData());
+
+    ParameterHandleValueMap munitionDetonationParameters;
+    munitionDetonationParameters[munitionDetonationDetonationLocationHandle_] = encodeWorldLocation(targetState.x, targetState.y, targetState.z);
+    munitionDetonationParameters[munitionDetonationDetonationResultCodeHandle_] = encodeDetonationResultCode(kDetonationResultEntityImpact);
+    munitionDetonationParameters[munitionDetonationEventIdentifierHandle_] = encodeEventIdentifier(eventCount, firingObjectId);
+    munitionDetonationParameters[munitionDetonationFiringObjectIdentifierHandle_] = encodeRtiObjectId(firingObjectId);
+    munitionDetonationParameters[munitionDetonationFinalVelocityVectorHandle_] = encodeVelocityVector(xVelocity, yVelocity, zVelocity);
+    munitionDetonationParameters[munitionDetonationFuseTypeHandle_] = encodeUnsignedInteger16(kFuseTypeContact);
+    munitionDetonationParameters[munitionDetonationMunitionObjectIdentifierHandle_] = encodeRtiObjectId(munitionObjectId);
+    munitionDetonationParameters[munitionDetonationMunitionTypeHandle_] = encodeEntityType(kMunitionEntityType);
+    munitionDetonationParameters[munitionDetonationQuantityFiredHandle_] = encodeUnsignedInteger16(1);
+    munitionDetonationParameters[munitionDetonationRateOfFireHandle_] = encodeUnsignedInteger16(0);
+    munitionDetonationParameters[munitionDetonationRelativeDetonationLocationHandle_] = encodeVelocityVector(0.0f, 0.0f, 0.0f);
+    munitionDetonationParameters[munitionDetonationTargetObjectIdentifierHandle_] = encodeRtiObjectId(targetObjectId);
+    munitionDetonationParameters[munitionDetonationWarheadTypeHandle_] = encodeUnsignedInteger16(kWarheadTypeHighExplosive);
+
+    rtiAmb_->sendInteraction(munitionDetonationClassHandle_, munitionDetonationParameters, VariableLengthData());
+}
+
 void SoldierFederate::engageNearbyTargets()
 {
     const auto now = std::chrono::steady_clock::now();
@@ -993,9 +1223,11 @@ void SoldierFederate::engageNearbyTargets()
     }
 
     const SoldierState* selectedTarget = nullptr;
+    const ObjectInstanceHandle* selectedTargetHandle = nullptr;
     double selectedDistanceSquared = kEngagementRangeMetersSquared;
     double selectedDx = 0.0;
     double selectedDy = 0.0;
+    double selectedDz = 0.0;
 
     for (const auto& kv : knownSoldiers_)
     {
@@ -1018,13 +1250,15 @@ void SoldierFederate::engageNearbyTargets()
         if (distanceSquared <= selectedDistanceSquared)
         {
             selectedTarget = &candidate;
+            selectedTargetHandle = &kv.first;
             selectedDistanceSquared = distanceSquared;
             selectedDx = dx;
             selectedDy = dy;
+            selectedDz = dz;
         }
     }
 
-    if (selectedTarget == nullptr)
+    if (selectedTarget == nullptr || selectedTargetHandle == nullptr)
     {
         return;
     }
@@ -1037,8 +1271,27 @@ void SoldierFederate::engageNearbyTargets()
     nextShotTime_ = now + kShotCooldown;
 
     const double distanceMeters = std::sqrt(selectedDistanceSquared);
+
+    try
+    {
+        sendWeaponFireAndDetonation(*selectedTargetHandle, *selectedTarget, selectedDx, selectedDy, selectedDz, distanceMeters);
+    }
+    catch (const Exception& ex)
+    {
+        combatInteractionsEnabled_ = false;
+        logMessage("WARN", "Failed to send combat interactions; disabling them for this run: " + toNarrow(ex.what()));
+    }
+    catch (const std::exception& ex)
+    {
+        combatInteractionsEnabled_ = false;
+        logMessage("WARN", std::string("Failed to send combat interactions; disabling them for this run: ") + ex.what());
+    }
+
     const std::string message = "Shot fired at " + selectedTarget->objectName +
-                                " distance=" + std::to_string(distanceMeters) + "m.";
+                                " distance=" + std::to_string(distanceMeters) +
+                                "m" +
+                                (combatInteractionsEnabled_ ? " (RPR WeaponFire + MunitionDetonation sent)."
+                                                            : " (local shot only; combat interactions disabled).");
     logMessage("INFO", message);
     std::cout << message << "\n";
 }

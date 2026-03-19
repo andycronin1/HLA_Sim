@@ -18,6 +18,11 @@ It updates these inherited RPR attributes:
 
 This lets VR-Forces discover this entity as an RPR lifeform when both are in the same federation and using compatible FOM modules.
 
+For close-range engagements, the federate also publishes these RPR interactions:
+
+- `HLAinteractionRoot.WeaponFire`
+- `HLAinteractionRoot.MunitionDetonation`
+
 ## RPR FOM In This Repo
 
 The VR-Forces RPR module has been copied into this repository at:
@@ -89,6 +94,7 @@ Fatal startup/runtime exceptions are also appended to:
 
 ## Notes
 
-- The previous custom `Soldier` class and `FireWeapon` interaction path has been removed from the sim logic.
+- The previous custom `Soldier` class path has been removed from the sim logic.
+- Engagement events are now emitted using standard RPR `WeaponFire` and `MunitionDetonation` interactions.
 - This federate now uses HLA encoding helper classes for RPR records/variant records, instead of raw host-endian memory copies.
 - If VR-Forces still does not display the entity, check that both federates use the same federation name and the same RPR FOM module set.

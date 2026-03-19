@@ -55,6 +55,12 @@ private:
     void logMessage(const std::string& level, const std::string& message);
 
     void engageNearbyTargets();
+    void sendWeaponFireAndDetonation(rti1516e::ObjectInstanceHandle targetHandle,
+                                     const SoldierState& targetState,
+                                     double dx,
+                                     double dy,
+                                     double dz,
+                                     double distanceMeters);
 
     bool initializeSpawnFromRemoteEntities();
     bool tryGetRemoteSpawnReference(SoldierState& remoteState) const;
@@ -90,6 +96,37 @@ private:
     rti1516e::AttributeHandle markingHandle_;
     rti1516e::ObjectInstanceHandle localSoldierHandle_;
 
+    rti1516e::InteractionClassHandle weaponFireClassHandle_;
+    rti1516e::InteractionClassHandle munitionDetonationClassHandle_;
+
+    rti1516e::ParameterHandle weaponFireEventIdentifierHandle_;
+    rti1516e::ParameterHandle weaponFireFireControlSolutionRangeHandle_;
+    rti1516e::ParameterHandle weaponFireFireMissionIndexHandle_;
+    rti1516e::ParameterHandle weaponFireFiringLocationHandle_;
+    rti1516e::ParameterHandle weaponFireFiringObjectIdentifierHandle_;
+    rti1516e::ParameterHandle weaponFireFuseTypeHandle_;
+    rti1516e::ParameterHandle weaponFireInitialVelocityVectorHandle_;
+    rti1516e::ParameterHandle weaponFireMunitionObjectIdentifierHandle_;
+    rti1516e::ParameterHandle weaponFireMunitionTypeHandle_;
+    rti1516e::ParameterHandle weaponFireQuantityFiredHandle_;
+    rti1516e::ParameterHandle weaponFireRateOfFireHandle_;
+    rti1516e::ParameterHandle weaponFireTargetObjectIdentifierHandle_;
+    rti1516e::ParameterHandle weaponFireWarheadTypeHandle_;
+
+    rti1516e::ParameterHandle munitionDetonationDetonationLocationHandle_;
+    rti1516e::ParameterHandle munitionDetonationDetonationResultCodeHandle_;
+    rti1516e::ParameterHandle munitionDetonationEventIdentifierHandle_;
+    rti1516e::ParameterHandle munitionDetonationFiringObjectIdentifierHandle_;
+    rti1516e::ParameterHandle munitionDetonationFinalVelocityVectorHandle_;
+    rti1516e::ParameterHandle munitionDetonationFuseTypeHandle_;
+    rti1516e::ParameterHandle munitionDetonationMunitionObjectIdentifierHandle_;
+    rti1516e::ParameterHandle munitionDetonationMunitionTypeHandle_;
+    rti1516e::ParameterHandle munitionDetonationQuantityFiredHandle_;
+    rti1516e::ParameterHandle munitionDetonationRateOfFireHandle_;
+    rti1516e::ParameterHandle munitionDetonationRelativeDetonationLocationHandle_;
+    rti1516e::ParameterHandle munitionDetonationTargetObjectIdentifierHandle_;
+    rti1516e::ParameterHandle munitionDetonationWarheadTypeHandle_;
+
     SoldierState localSoldier_;
     std::map<rti1516e::ObjectInstanceHandle, SoldierState> knownSoldiers_;
 
@@ -102,4 +139,6 @@ private:
     bool objectInstanceNameReservationPending_ = false;
     bool objectInstanceNameReserved_ = false;
     std::chrono::steady_clock::time_point nextShotTime_{};
+    bool combatInteractionsEnabled_ = false;
+    uint16_t nextEventCount_ = 1;
 };
